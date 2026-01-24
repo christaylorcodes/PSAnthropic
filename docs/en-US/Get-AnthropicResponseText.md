@@ -1,0 +1,78 @@
+﻿---
+external help file: PSAnthropic-help.xml
+Module Name: PSAnthropic
+online version:
+schema: 2.0.0
+---
+
+# Get-AnthropicResponseText
+
+## SYNOPSIS
+Extracts text content from an Anthropic API response.
+
+## SYNTAX
+
+```
+Get-AnthropicResponseText [-Response] <PSObject> [-ProgressAction <ActionPreference>] [<CommonParameters>]
+```
+
+## DESCRIPTION
+Convenience function to extract the text from a response object.
+Handles responses with multiple content blocks by concatenating all text.
+
+## EXAMPLES
+
+### EXAMPLE 1
+```
+$response = Invoke-AnthropicMessage -Messages @(New-AnthropicMessage -Role 'user' -Content 'Hello')
+$response | Get-AnthropicResponseText
+```
+
+### EXAMPLE 2
+```
+Get-AnthropicResponseText -Response $response
+```
+
+## PARAMETERS
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Response
+The response object from Invoke-AnthropicMessage.
+
+```yaml
+Type: PSObject
+Parameter Sets: (All)
+Aliases:
+
+Required: True
+Position: 1
+Default value: None
+Accept pipeline input: True (ByValue)
+Accept wildcard characters: False
+```
+
+### CommonParameters
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+
+## INPUTS
+
+## OUTPUTS
+
+### System.String
+## NOTES
+
+## RELATED LINKS

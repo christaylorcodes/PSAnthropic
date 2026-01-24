@@ -1,0 +1,114 @@
+﻿---
+external help file: PSAnthropic-help.xml
+Module Name: PSAnthropic
+online version:
+schema: 2.0.0
+---
+
+# Get-AnthropicRouterLog
+
+## SYNOPSIS
+Reads and analyzes the router log.
+
+## SYNTAX
+
+```
+Get-AnthropicRouterLog [[-Path] <String>] [[-Last] <Int32>] [-Summary] [-ProgressAction <ActionPreference>]
+ [<CommonParameters>]
+```
+
+## DESCRIPTION
+Retrieves routing decisions from the log file with optional filtering and statistics.
+
+## EXAMPLES
+
+### EXAMPLE 1
+```
+Get-AnthropicRouterLog -Last 10
+```
+
+### EXAMPLE 2
+```
+Get-AnthropicRouterLog -Summary
+```
+
+### EXAMPLE 3
+```
+# Get stats programmatically
+$stats = Get-AnthropicRouterLog -Summary
+$stats.ByModel['qwen3-coder-8k']  # Count for this model
+```
+
+## PARAMETERS
+
+### -Last
+Return only the last N entries.
+
+```yaml
+Type: Int32
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 2
+Default value: 0
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Path
+Path to the log file.
+If not specified, uses the configured LogPath.
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 1
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Summary
+Return summary statistics instead of raw log entries.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### CommonParameters
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+
+## INPUTS
+
+## OUTPUTS
+
+## NOTES
+
+## RELATED LINKS

@@ -1,0 +1,122 @@
+﻿---
+external help file: PSAnthropic-help.xml
+Module Name: PSAnthropic
+online version:
+schema: 2.0.0
+---
+
+# New-AnthropicTool
+
+## SYNOPSIS
+Creates a tool definition for the Anthropic Tools API.
+
+## SYNTAX
+
+```
+New-AnthropicTool [-Name] <String> [-Description] <String> [-InputSchema] <Hashtable>
+ [-ProgressAction <ActionPreference>] [<CommonParameters>]
+```
+
+## DESCRIPTION
+Creates a properly structured tool definition hashtable that can be passed
+to Invoke-AnthropicMessage's -Tools parameter for function calling.
+
+## EXAMPLES
+
+### EXAMPLE 1
+```
+$tool = New-AnthropicTool -Name 'get_weather' -Description 'Get weather for a location' -InputSchema @{
+    type = 'object'
+    properties = @{
+        location = @{ type = 'string'; description = 'City name' }
+        unit = @{ type = 'string'; enum = @('celsius', 'fahrenheit') }
+    }
+    required = @('location')
+}
+```
+
+### EXAMPLE 2
+```
+# Simple tool with no parameters
+$tool = New-AnthropicTool -Name 'get_time' -Description 'Get current time' -InputSchema @{
+    type = 'object'
+    properties = @{}
+}
+```
+
+## PARAMETERS
+
+### -Description
+A description of what the tool does.
+The model uses this to decide when to call it.
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: True
+Position: 2
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -InputSchema
+A JSON Schema object defining the tool's parameters.
+Must be type 'object'.
+
+```yaml
+Type: Hashtable
+Parameter Sets: (All)
+Aliases:
+
+Required: True
+Position: 3
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Name
+The name of the tool.
+Should be a valid identifier (letters, numbers, underscores).
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: True
+Position: 1
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### CommonParameters
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+
+## INPUTS
+
+## OUTPUTS
+
+### System.Collections.Hashtable
+## NOTES
+
+## RELATED LINKS

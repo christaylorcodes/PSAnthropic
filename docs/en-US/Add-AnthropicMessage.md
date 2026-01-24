@@ -1,0 +1,152 @@
+﻿---
+external help file: PSAnthropic-help.xml
+Module Name: PSAnthropic
+online version:
+schema: 2.0.0
+---
+
+# Add-AnthropicMessage
+
+## SYNOPSIS
+Adds a message to an existing conversation.
+
+## SYNTAX
+
+### Content (Default)
+```
+Add-AnthropicMessage -Conversation <AnthropicConversation> -Role <AnthropicRole> -Content <Object> [-PassThru]
+ [-ProgressAction <ActionPreference>] [<CommonParameters>]
+```
+
+### Response
+```
+Add-AnthropicMessage -Conversation <AnthropicConversation> -Response <PSObject> [-PassThru]
+ [-ProgressAction <ActionPreference>] [<CommonParameters>]
+```
+
+## DESCRIPTION
+Appends a new message to a conversation's Messages array.
+The conversation is modified in place.
+
+## EXAMPLES
+
+### EXAMPLE 1
+```
+Add-AnthropicMessage -Conversation $conv -Role 'user' -Content 'Hello!'
+```
+
+### EXAMPLE 2
+```
+Add-AnthropicMessage -Conversation $conv -Response $response
+# Adds the assistant's response text to the conversation
+```
+
+### EXAMPLE 3
+```
+$conv = $conv | Add-AnthropicMessage -Role 'user' -Content 'Hi' -PassThru
+```
+
+## PARAMETERS
+
+### -Content
+The message content.
+
+```yaml
+Type: Object
+Parameter Sets: Content
+Aliases:
+
+Required: True
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Conversation
+The conversation hashtable created by New-AnthropicConversation.
+
+```yaml
+Type: AnthropicConversation
+Parameter Sets: (All)
+Aliases:
+
+Required: True
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName, ByValue)
+Accept wildcard characters: False
+```
+
+### -PassThru
+Return the updated conversation object.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Response
+Alternative: Add the text from an API response as an assistant message.
+
+```yaml
+Type: PSObject
+Parameter Sets: Response
+Aliases:
+
+Required: True
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Role
+The role of the message sender ('user' or 'assistant').
+
+```yaml
+Type: AnthropicRole
+Parameter Sets: Content
+Aliases:
+Accepted values: user, assistant
+
+Required: True
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### CommonParameters
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+
+## INPUTS
+
+## OUTPUTS
+
+### AnthropicConversation
+## NOTES
+
+## RELATED LINKS

@@ -1,0 +1,237 @@
+﻿---
+external help file: PSAnthropic-help.xml
+Module Name: PSAnthropic
+online version:
+schema: 2.0.0
+---
+
+# Invoke-AnthropicRouted
+
+## SYNOPSIS
+Sends messages using automatic model routing based on task type.
+
+## SYNTAX
+
+```
+Invoke-AnthropicRouted [-Messages] <Object[]> [-TaskType <String>] [-System <String>] [-MaxTokens <Int32>]
+ [-Temperature <Double>] [-Stream] [-Tools <Hashtable[]>] [-ToolChoice <Object>] [-NumCtx <Int32>]
+ [-TimeoutSec <Int32>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
+```
+
+## DESCRIPTION
+Routes requests to the appropriate model based on TaskType parameter.
+Logs routing decisions for later analysis.
+
+Requires Set-AnthropicRouterConfig to be called first.
+
+## EXAMPLES
+
+### EXAMPLE 1
+```
+# Route to default model
+Invoke-AnthropicRouted -Messages $msgs
+```
+
+### EXAMPLE 2
+```
+# Route to code model
+Invoke-AnthropicRouted -Messages $msgs -TaskType Code
+```
+
+### EXAMPLE 3
+```
+# Route with tools (auto-selects code model if configured)
+Invoke-AnthropicRouted -Messages $msgs -TaskType Code -Tools $tools
+```
+
+### EXAMPLE 4
+```
+# Pipeline input from conversation
+$conversation.Messages | Invoke-AnthropicRouted -TaskType Code
+```
+
+## PARAMETERS
+
+### -MaxTokens
+Maximum tokens to generate.
+Defaults to 4096.
+
+```yaml
+Type: Int32
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: 4096
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Messages
+Array of message objects.
+Use New-AnthropicMessage to create.
+Supports pipeline input - messages are accumulated before routing.
+
+```yaml
+Type: Object[]
+Parameter Sets: (All)
+Aliases:
+
+Required: True
+Position: 1
+Default value: None
+Accept pipeline input: True (ByValue)
+Accept wildcard characters: False
+```
+
+### -NumCtx
+Context window size (Ollama-specific).
+
+```yaml
+Type: Int32
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: 0
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Stream
+Enable streaming output.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -System
+System prompt to set context for the conversation.
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -TaskType
+The type of task to route.
+Maps to configured models.
+Common types: Default, Code, Vision, Complex, Fast, Creative.
+If not specified, uses 'Default'.
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: Default
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Temperature
+Sampling temperature (0.0-1.0).
+
+```yaml
+Type: Double
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: 0
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -TimeoutSec
+Request timeout in seconds.
+Defaults to 300.
+
+```yaml
+Type: Int32
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: 300
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ToolChoice
+{{ Fill ToolChoice Description }}
+
+```yaml
+Type: Object
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Tools
+Array of tool definitions for function calling.
+
+```yaml
+Type: Hashtable[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### CommonParameters
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+
+## INPUTS
+
+## OUTPUTS
+
+### System.Management.Automation.PSObject
+## NOTES
+
+## RELATED LINKS

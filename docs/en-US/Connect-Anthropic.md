@@ -1,0 +1,177 @@
+﻿---
+external help file: PSAnthropic-help.xml
+Module Name: PSAnthropic
+online version:
+schema: 2.0.0
+---
+
+# Connect-Anthropic
+
+## SYNOPSIS
+Establishes a connection to an Anthropic-compatible API endpoint.
+
+## SYNTAX
+
+```
+Connect-Anthropic [[-Server] <String>] [[-ApiKey] <String>] [[-Model] <String>] [-Force]
+ [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
+```
+
+## DESCRIPTION
+Initializes the connection settings for communicating with Ollama's
+Anthropic-compatible API.
+Stores connection info in a script-scoped variable.
+
+Parameters are checked in order:
+1.
+Explicit parameters
+2.
+Environment variables (ANTHROPIC_BASE_URL, ANTHROPIC_API_KEY, ANTHROPIC_MODEL)
+3.
+Auto-detection (queries server for available models)
+4.
+Defaults (localhost:11434, "ollama", "llama3")
+
+## EXAMPLES
+
+### EXAMPLE 1
+```
+Connect-Anthropic
+# Connects with defaults (localhost:11434, ollama, llama3)
+```
+
+### EXAMPLE 2
+```
+Connect-Anthropic -Server 'localhost:11434' -Model 'qwen3-coder'
+# Connects with a specific model
+```
+
+### EXAMPLE 3
+```
+Connect-Anthropic -Server 'api.anthropic.com' -ApiKey $realApiKey -Model 'claude-3-5-sonnet'
+# Connects to Anthropic's cloud API (if needed)
+```
+
+## PARAMETERS
+
+### -ApiKey
+The API key for authentication.
+For Ollama, use 'ollama' (accepted but not validated).
+Defaults to $env:ANTHROPIC_API_KEY or 'ollama'.
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 2
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Force
+Reconnect even if already connected.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Model
+The default model to use for requests.
+Defaults to $env:ANTHROPIC_MODEL, then auto-detects from server, then 'llama3'.
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 3
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Server
+The server address (e.g., 'localhost:11434' or 'http://localhost:11434').
+Defaults to $env:ANTHROPIC_BASE_URL or 'localhost:11434'.
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 1
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Confirm
+Prompts you for confirmation before running the cmdlet.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: cf
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -WhatIf
+Shows what would happen if the cmdlet runs.
+The cmdlet is not run.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: wi
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### CommonParameters
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+
+## INPUTS
+
+## OUTPUTS
+
+### AnthropicConnection
+## NOTES
+
+## RELATED LINKS

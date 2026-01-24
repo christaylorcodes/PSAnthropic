@@ -1,0 +1,154 @@
+﻿---
+external help file: PSAnthropic-help.xml
+Module Name: PSAnthropic
+online version:
+schema: 2.0.0
+---
+
+# Set-AnthropicRouterConfig
+
+## SYNOPSIS
+Configures the model router with task-to-model mappings.
+
+## SYNTAX
+
+```
+Set-AnthropicRouterConfig [-Models] <Hashtable> [[-LogPath] <String>] [-LogToConsole]
+ [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
+```
+
+## DESCRIPTION
+Sets up routing rules that map task types to specific models.
+Also configures logging for routing decisions.
+
+## EXAMPLES
+
+### EXAMPLE 1
+```
+Set-AnthropicRouterConfig -Models @{
+    Default = 'llama3.1-8k'
+    Code    = 'qwen3-coder-8k'
+    Vision  = 'llama3.2-vision:11b'
+}
+```
+
+### EXAMPLE 2
+```
+Set-AnthropicRouterConfig -Models @{
+    Default = 'llama3.1-8k'
+    Code    = 'qwen3-coder-8k'
+} -LogPath './router.log' -LogToConsole
+```
+
+### EXAMPLE 3
+```
+# Test with -WhatIf
+Set-AnthropicRouterConfig -Models @{ Default = 'llama3' } -LogPath './test.log' -WhatIf
+```
+
+## PARAMETERS
+
+### -LogPath
+Path to log file for routing decisions.
+If not specified, no file logging.
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 2
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -LogToConsole
+Write routing decisions to console (verbose).
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Models
+Hashtable mapping task types to model names.
+Required keys: Default.
+Optional: Code, Vision, Complex, Fast, Creative.
+
+```yaml
+Type: Hashtable
+Parameter Sets: (All)
+Aliases:
+
+Required: True
+Position: 1
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Confirm
+Prompts you for confirmation before running the cmdlet.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: cf
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -WhatIf
+Shows what would happen if the cmdlet runs.
+The cmdlet is not run.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: wi
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### CommonParameters
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+
+## INPUTS
+
+## OUTPUTS
+
+## NOTES
+
+## RELATED LINKS

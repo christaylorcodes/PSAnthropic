@@ -20,4 +20,5 @@
     ModuleBuilder               = 'latest'
     'powershell-yaml'           = 'latest'
     ChangelogManagement         = 'latest'
+    platyPS                     = 'latest'
 }

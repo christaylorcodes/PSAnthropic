@@ -1,0 +1,120 @@
+﻿---
+external help file: PSAnthropic-help.xml
+Module Name: PSAnthropic
+online version:
+schema: 2.0.0
+---
+
+# New-AnthropicToolResult
+
+## SYNOPSIS
+Creates a tool result message to send back to the model.
+
+## SYNTAX
+
+```
+New-AnthropicToolResult [-ToolUseId] <String> [-Content] <Object> [-IsError]
+ [-ProgressAction <ActionPreference>] [<CommonParameters>]
+```
+
+## DESCRIPTION
+After the model requests a tool call (stop_reason = 'tool_use'),
+execute the tool and send the result back using this function.
+The result is formatted as a user message with tool_result content.
+
+## EXAMPLES
+
+### EXAMPLE 1
+
+```powershell
+# Get tool use from response
+$toolUse = $response.content | Where-Object { $_.type -eq 'tool_use' }
+
+# Execute tool and get result
+$result = Get-Weather -Location $toolUse.input.location
+
+# Create tool result message
+$toolResult = New-AnthropicToolResult -ToolUseId $toolUse.id -Content $result
+```
+
+### EXAMPLE 2
+```
+# Error case
+$toolResult = New-AnthropicToolResult -ToolUseId $toolUse.id -Content 'API unavailable' -IsError
+```
+
+## PARAMETERS
+
+### -Content
+The result of executing the tool.
+Can be a string or will be converted to JSON.
+
+```yaml
+Type: Object
+Parameter Sets: (All)
+Aliases:
+
+Required: True
+Position: 2
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -IsError
+Indicates the tool execution failed.
+The content should describe the error.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ToolUseId
+The ID from the tool_use content block in the model's response.
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: True
+Position: 1
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### CommonParameters
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+
+## INPUTS
+
+## OUTPUTS
+
+### System.Collections.Hashtable
+## NOTES
+
+## RELATED LINKS
