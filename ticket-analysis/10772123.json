@@ -1,0 +1,14 @@
+{
+  "ticketId": 10772123,
+  "summary": "Escalation - Spam filter is allowing too much spam/junk mail to get through",
+  "company": "Orchid Event Solutions",
+  "status": "Waiting Client Response",
+  "priority": "Priority 3",
+  "model": "qwen3-coder-32k:latest",
+  "generatedAt": "2026-01-24T11:10:35.2349906-07:00",
+  "analysis": null,
+  "usage": {
+    "inputTokens": null,
+    "outputTokens": null
+  }
+}

@@ -1,0 +1,44 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches:
+      - main
+      - master
+
+env:
+  MODULE_NAME: PSAnthropic
+
+jobs:
+  validate:
+    name: Validate PR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check CHANGELOG Updated
+        shell: pwsh
+        run: |
+          $changedFiles = git diff --name-only origin/${{ github.base_ref }}...HEAD
+
+          if ($changedFiles -contains 'CHANGELOG.md') {
+              Write-Host "CHANGELOG.md has been updated" -ForegroundColor Green
+          } else {
+              Write-Host "::warning::CHANGELOG.md has not been updated. Consider adding your changes to the [Unreleased] section."
+          }
+
+      - name: Display Version Info
+        shell: pwsh
+        run: |
+          $ManifestPath = Get-ChildItem -Path "PSAnthropic/*.psd1" | Select-Object -First 1
+          if ($ManifestPath) {
+              $Manifest = Import-PowerShellDataFile -Path $ManifestPath.FullName
+              Write-Host "Current manifest version: $($Manifest.ModuleVersion)"
+              Write-Host ""
+              Write-Host "Note: The published version is determined by git tags, not the manifest."
+              Write-Host "To publish, create a tag like: git tag -a v1.0.0 -m 'Release v1.0.0'"
+          }

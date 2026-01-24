@@ -1,0 +1,98 @@
+---
+####################################################
+#          ModuleBuilder Configuration             #
+####################################################
+
+SourcePath: PSAnthropic
+CopyPaths:
+  - en-US
+  - Classes.ps1
+Encoding: UTF8
+VersionedOutputDirectory: true
+
+####################################################
+#              Pipeline Configuration              #
+####################################################
+
+BuildWorkflow:
+  '.':
+    - build
+    - test
+
+  build:
+    - Clean
+    - Build_ModuleOutput_ModuleBuilder
+    - Create_changelog_release_output
+
+  pack:
+    - build
+    - package_module_nupkg
+
+  test:
+    - Pester_Tests_Stop_On_Fail
+
+  publish:
+    - publish_module_to_gallery
+
+####################################################
+#       Sampler Pipeline Configuration             #
+####################################################
+
+Sampler:
+  DefaultOutputDirectory: 'output'
+
+ModuleBuildTasks:
+  Sampler:
+    - '*.build.Sampler.ib.tasks'
+  Sampler.GitHubTasks:
+    - '*.ib.tasks'
+  ModuleBuilder:
+    - '*.build.ModuleBuilder.ib.tasks'
+
+TaskHeader: |
+  param($Path)
+  ""
+  "=" * 79
+  Write-Build Cyan "`t`t`t$($Task.Name.replace("_"," ").ToUpper())"
+  Write-Build DarkGray  "$(Get-BuildSynopsis $Task)"
+  "-" * 79
+  Write-Build DarkGray "  $Path"
+  Write-Build DarkGray "  $($Task.InvocationInfo.ScriptName):$($Task.InvocationInfo.ScriptLineNumber)"
+  ""
+
+####################################################
+#       PESTER Configuration                       #
+####################################################
+
+Pester:
+  Script:
+    - Tests/PSAnthropic.Tests.ps1
+  ExcludeTag:
+    - Integration
+    - Generative
+  Tag:
+  OutputFile: output/testResults/testResults.xml
+  OutputFormat: NUnitXml
+  PassThru: true
+
+####################################################
+#       PSScriptAnalyzer Configuration            #
+####################################################
+
+PSScriptAnalyzer:
+  Script: PSAnthropic
+  Settings: PSScriptAnalyzerSettings.psd1
+  ExcludeRule:
+  IncludeRule:
+
+ChangelogConfig:
+  UpdateChangelogOnPrerelease: false
+  FilterByPath:
+    - PSAnthropic/
+
+GitHubConfig:
+  GitHubFilesToAdd:
+    - 'CHANGELOG.md'
+  GitHubConfigUserName: christaylorcodes
+  GitHubConfigUserEmail: chris@yourconnectedtech.com
+  UpdateChangelogOnPrerelease: false

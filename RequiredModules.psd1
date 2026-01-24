@@ -1,0 +1,23 @@
+@{
+    PSDependOptions             = @{
+        AddToPath  = $true
+        Target     = 'output\RequiredModules'
+        Parameters = @{
+            Repository = 'PSGallery'
+        }
+    }
+
+    InvokeBuild                 = 'latest'
+    PSScriptAnalyzer            = 'latest'
+    Pester                      = @{
+        Version    = '5.6.1'
+        Parameters = @{
+            SkipPublisherCheck = $true
+        }
+    }
+    Sampler                     = 'latest'
+    'Sampler.GitHubTasks'       = 'latest'
+    ModuleBuilder               = 'latest'
+    'powershell-yaml'           = 'latest'
+    ChangelogManagement         = 'latest'
+}
