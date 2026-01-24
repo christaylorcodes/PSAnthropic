@@ -23,3 +23,6 @@ Thumbs.db
 # Environment/secrets
 .env
 *.local
+
+# Claude Code local settings
+.claude/
