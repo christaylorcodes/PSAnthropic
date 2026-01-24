@@ -25,17 +25,16 @@ The result is formatted as a user message with tool_result content.
 ## EXAMPLES
 
 ### EXAMPLE 1
-
-```powershell
+```
 # Get tool use from response
 $toolUse = $response.content | Where-Object { $_.type -eq 'tool_use' }
+```
 
 # Execute tool and get result
 $result = Get-Weather -Location $toolUse.input.location
 
 # Create tool result message
 $toolResult = New-AnthropicToolResult -ToolUseId $toolUse.id -Content $result
-```
 
 ### EXAMPLE 2
 ```

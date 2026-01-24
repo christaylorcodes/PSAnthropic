@@ -44,6 +44,11 @@ Import-Module platyPS -Force
 # Remove any existing module from session
 Get-Module PSAnthropic | Remove-Module -Force -ErrorAction SilentlyContinue
 
+# Load classes first (required for OutputType resolution in Get-Help)
+$classesPath = Join-Path $PSScriptRoot 'PSAnthropic' 'Classes.ps1'
+Write-Host "Loading classes from: $classesPath" -ForegroundColor Gray
+. $classesPath
+
 # Import the source module (not the built one)
 $modulePath = Join-Path $PSScriptRoot 'PSAnthropic'
 Write-Host "Importing module from: $modulePath" -ForegroundColor Gray
