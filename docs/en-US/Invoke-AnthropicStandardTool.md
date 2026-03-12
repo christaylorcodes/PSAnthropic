@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: PSAnthropic-help.xml
 Module Name: PSAnthropic
 online version:
@@ -61,9 +61,24 @@ $result = Invoke-AnthropicStandardTool -ToolUse $toolUse -AllowShell -Unsafe
 
 ## PARAMETERS
 
-### -AllowAllPaths
-Disables path restrictions, allowing file operations on any accessible path.
-Use with caution - this allows the model to read/write files anywhere.
+### -ToolUse
+The tool_use object from the model's response containing name and input.
+
+```yaml
+Type: Object
+Parameter Sets: (All)
+Aliases:
+
+Required: True
+Position: 1
+Default value: None
+Accept pipeline input: True (ByValue)
+Accept wildcard characters: False
+```
+
+### -AllowWrite
+Allow write operations (create, str_replace, insert).
+Default is $false for safety.
 
 ```yaml
 Type: SwitchParameter
@@ -73,25 +88,6 @@ Aliases:
 Required: False
 Position: Named
 Default value: False
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -AllowedPaths
-Array of allowed root directories for file operations.
-Paths outside these
-directories will be rejected.
-Defaults to current directory for security.
-Use -AllowAllPaths to disable path restrictions.
-
-```yaml
-Type: String[]
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: 5
-Default value: @((Get-Location).Path)
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -128,9 +124,9 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -AllowWrite
-Allow write operations (create, str_replace, insert).
-Default is $false for safety.
+### -Unsafe
+WARNING: Disables all sandboxing for shell commands, using Invoke-Expression directly.
+Only use for testing in controlled environments where you trust all input.
 
 ```yaml
 Type: SwitchParameter
@@ -162,9 +158,9 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -MaxFileSizeBytes
-Maximum file size in bytes for read operations.
-Default is 10MB.
+### -TimeoutSeconds
+Maximum execution time for shell commands in seconds.
+Default is 30.
 
 ```yaml
 Type: Int32
@@ -172,8 +168,8 @@ Parameter Sets: (All)
 Aliases:
 
 Required: False
-Position: 6
-Default value: 10485760
+Position: 3
+Default value: 30
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -189,6 +185,57 @@ Aliases:
 Required: False
 Position: 4
 Default value: 10000
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -AllowedPaths
+Array of allowed root directories for file operations.
+Paths outside these
+directories will be rejected.
+Defaults to current directory for security.
+Use -AllowAllPaths to disable path restrictions.
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 5
+Default value: @((Get-Location).Path)
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -AllowAllPaths
+Disables path restrictions, allowing file operations on any accessible path.
+Use with caution - this allows the model to read/write files anywhere.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -MaxFileSizeBytes
+Maximum file size in bytes for read operations.
+Default is 10MB.
+
+```yaml
+Type: Int32
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 6
+Default value: 10485760
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -209,64 +256,18 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -ProgressAction
-{{ Fill ProgressAction Description }}
-
-```yaml
-Type: ActionPreference
-Parameter Sets: (All)
-Aliases: proga
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -TimeoutSeconds
-Maximum execution time for shell commands in seconds.
-Default is 30.
-
-```yaml
-Type: Int32
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: 3
-Default value: 30
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -ToolUse
-The tool_use object from the model's response containing name and input.
-
-```yaml
-Type: Object
-Parameter Sets: (All)
-Aliases:
-
-Required: True
-Position: 1
-Default value: None
-Accept pipeline input: True (ByValue)
-Accept wildcard characters: False
-```
-
-### -Unsafe
-WARNING: Disables all sandboxing for shell commands, using Invoke-Expression directly.
-Only use for testing in controlled environments where you trust all input.
+### -WhatIf
+Shows what would happen if the cmdlet runs.
+The cmdlet is not run.
 
 ```yaml
 Type: SwitchParameter
 Parameter Sets: (All)
-Aliases:
+Aliases: wi
 
 Required: False
 Position: Named
-Default value: False
+Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -286,14 +287,13 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -WhatIf
-Shows what would happen if the cmdlet runs.
-The cmdlet is not run.
+### -ProgressAction
+Determines how the cmdlet responds to progress updates generated by a command. See the ProgressAction common parameter for more information.
 
 ```yaml
-Type: SwitchParameter
+Type: ActionPreference
 Parameter Sets: (All)
-Aliases: wi
+Aliases: proga
 
 Required: False
 Position: Named
@@ -313,3 +313,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## NOTES
 
 ## RELATED LINKS
+
+[https://github.com/christaylorcodes/PSAnthropic](https://github.com/christaylorcodes/PSAnthropic)
+
+[https://christaylor.codes](https://christaylor.codes)

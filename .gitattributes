@@ -1,0 +1,56 @@
+# Git Attributes Configuration
+# https://git-scm.com/docs/gitattributes
+
+# Set default behavior to automatically normalize line endings
+* text=auto
+
+# PowerShell files
+*.ps1     text eol=crlf diff=powershell
+*.psm1    text eol=crlf diff=powershell
+*.psd1    text eol=crlf
+*.ps1xml  text eol=crlf
+
+# Source code
+*.json    text
+*.xml     text
+
+# Documentation
+*.md         text diff=markdown
+*.txt        text
+
+# Config files
+*.yml        text
+*.yaml       text
+.editorconfig text
+.gitattributes text
+.gitignore   text
+
+# Graphics
+*.png        binary
+*.jpg        binary
+*.jpeg       binary
+*.gif        binary
+*.webp       binary
+
+# Archives
+*.zip        binary
+*.gz         binary
+*.nupkg      binary
+
+# Special files
+LICENSE      text
+CHANGELOG    text
+
+# Merge strategies
+CHANGELOG*   merge=union
+
+# Linguist
+docs/**      linguist-documentation
+*.md         linguist-documentation
+
+# Export ignore
+.gitattributes   export-ignore
+.gitignore       export-ignore
+.editorconfig    export-ignore
+.github          export-ignore
+Tests            export-ignore

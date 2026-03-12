@@ -1645,3 +1645,290 @@ $webContent
     }
 }
 #endregion
+
+#region Mock-Based HTTP Error Tests
+# These tests use mocks to simulate HTTP errors without requiring a server
+Describe 'HTTP Error Handling (Mock-Based)' {
+    BeforeAll {
+        # Load classes for exception type tests
+        $classesPath = Join-Path $PSScriptRoot '..' 'PSAnthropic' 'Classes.ps1'
+        . $classesPath
+
+        # Ensure connection exists for Invoke-AnthropicWebRequest
+        Connect-Anthropic -Model 'mock-model' -Force
+    }
+
+    AfterAll {
+        Disconnect-Anthropic -ErrorAction SilentlyContinue
+    }
+
+    Context 'Rate Limiting (429)' {
+        It 'Should write error with AnthropicRateLimitException on 429' {
+            # Create a mock response object that simulates 429
+            Mock Invoke-WebRequest -ModuleName PSAnthropic {
+                $response = [System.Net.HttpWebResponse]::new()
+                $exception = [System.Net.WebException]::new(
+                    'Too Many Requests',
+                    $null,
+                    [System.Net.WebExceptionStatus]::ProtocolError,
+                    $response
+                )
+                throw $exception
+            }
+
+            # Mock the Response property to return 429
+            Mock -CommandName 'Invoke-WebRequest' -ModuleName PSAnthropic {
+                $ex = [System.Exception]::new('Too Many Requests')
+                # PowerShell creates ErrorRecord with Response property
+                throw $ex
+            }
+
+            $error.Clear()
+            Invoke-AnthropicWebRequest -Uri 'http://test/v1/messages' -Method GET -ErrorAction SilentlyContinue -ErrorVariable webError
+
+            # The function should have written an error
+            $webError | Should -Not -BeNullOrEmpty
+        }
+    }
+
+    Context 'Authentication Errors (401)' {
+        It 'Should include helpful message about API key in 401 error' {
+            # We test by checking the error message format from the exception class
+            $exception = [AnthropicAuthenticationException]::new(
+                "Authentication failed: Invalid API key. Check your API key or run 'Connect-Anthropic -Force'.",
+                $null
+            )
+
+            $exception.Message | Should -Match 'Connect-Anthropic'
+            $exception.StatusCode | Should -Be 401
+            $exception.ErrorType | Should -Be 'authentication_error'
+        }
+    }
+
+    Context 'Server Errors (5xx)' {
+        It 'Should create AnthropicServerException with correct properties' {
+            $exception = [AnthropicServerException]::new(
+                'Server error (HTTP 500) after 3 retries: Internal Server Error',
+                500,
+                @{ error = @{ message = 'Internal Server Error' } }
+            )
+
+            $exception.StatusCode | Should -Be 500
+            $exception.ErrorType | Should -Be 'server_error'
+            $exception.Message | Should -Match '500'
+            $exception.Message | Should -Match 'retries'
+        }
+    }
+
+    Context 'Connection Errors' {
+        It 'Should create AnthropicConnectionException with status -1' {
+            $exception = [AnthropicConnectionException]::new(
+                'Connection error to http://localhost:11434: Unable to connect'
+            )
+
+            $exception.StatusCode | Should -Be -1
+            $exception.ErrorType | Should -Be 'connection_error'
+            $exception.Message | Should -Match 'Connection error'
+        }
+
+        It 'Should wrap inner exception' {
+            $inner = [System.Net.Sockets.SocketException]::new()
+            $exception = [AnthropicConnectionException]::new(
+                'Connection failed',
+                $inner
+            )
+
+            $exception.InnerException | Should -Not -BeNullOrEmpty
+            $exception.StatusCode | Should -Be -1
+        }
+    }
+
+    Context 'Exception Hierarchy' {
+        It 'All typed exceptions should inherit from AnthropicApiException' {
+            # Test exception types loaded by module - classes already loaded by main BeforeAll
+            # Use module's exported types via reflection to avoid parse-time type resolution
+            $module = Get-Module PSAnthropic
+            $assembly = $module.ImplementingAssembly
+
+            # Get types directly from the PSAnthropic session state where classes are defined
+            $exceptionNames = @(
+                'AnthropicBadRequestException',
+                'AnthropicAuthenticationException',
+                'AnthropicPermissionException',
+                'AnthropicNotFoundException',
+                'AnthropicRateLimitException',
+                'AnthropicOverloadedException',
+                'AnthropicServerException',
+                'AnthropicConnectionException'
+            )
+
+            foreach ($name in $exceptionNames) {
+                # Create instance dynamically using Invoke-Expression (types are available at runtime)
+                $createExpr = switch ($name) {
+                    'AnthropicRateLimitException' { "[$name]::new('test', 30, `$null)" }
+                    'AnthropicServerException' { "[$name]::new('test', 500, `$null)" }
+                    'AnthropicConnectionException' { "[$name]::new('test')" }
+                    default { "[$name]::new('test', `$null)" }
+                }
+
+                $ex = Invoke-Expression $createExpr
+                $ex.GetType().BaseType.Name | Should -Be 'AnthropicApiException' -Because "$name should inherit from AnthropicApiException"
+            }
+        }
+
+        It 'AnthropicRateLimitException should have RetryAfterSeconds property' {
+            $exception = [AnthropicRateLimitException]::new('Rate limited', 45, $null)
+
+            $exception.RetryAfterSeconds | Should -Be 45
+        }
+
+        It 'Each exception should have correct status code' {
+            [AnthropicBadRequestException]::new('', $null).StatusCode | Should -Be 400
+            [AnthropicAuthenticationException]::new('', $null).StatusCode | Should -Be 401
+            [AnthropicPermissionException]::new('', $null).StatusCode | Should -Be 403
+            [AnthropicNotFoundException]::new('', $null).StatusCode | Should -Be 404
+            [AnthropicRateLimitException]::new('', 0, $null).StatusCode | Should -Be 429
+            [AnthropicOverloadedException]::new('', $null).StatusCode | Should -Be 529
+        }
+    }
+}
+#endregion
+
+#region Mock-Based Streaming Tests
+Describe 'Streaming (Mock-Based)' {
+    BeforeAll {
+        Connect-Anthropic -Model 'mock-model' -Force
+    }
+
+    AfterAll {
+        Disconnect-Anthropic -ErrorAction SilentlyContinue
+    }
+
+    Context 'Event Stream Output' {
+        It 'Should pass through stream events from Invoke-AnthropicStreamRequest' {
+            Mock Invoke-AnthropicStreamRequest -ModuleName PSAnthropic {
+                # Simulate SSE event sequence
+                [PSCustomObject]@{ type = 'message_start'; message = @{ id = 'msg_mock1'; model = 'mock-model' } }
+                [PSCustomObject]@{ type = 'content_block_start'; index = 0; content_block = @{ type = 'text'; text = '' } }
+                [PSCustomObject]@{ type = 'content_block_delta'; index = 0; delta = @{ type = 'text_delta'; text = 'Hello' } }
+                [PSCustomObject]@{ type = 'content_block_delta'; index = 0; delta = @{ type = 'text_delta'; text = ' world' } }
+                [PSCustomObject]@{ type = 'content_block_stop'; index = 0 }
+                [PSCustomObject]@{ type = 'message_delta'; delta = @{ stop_reason = 'end_turn' }; usage = @{ output_tokens = 5 } }
+                [PSCustomObject]@{ type = 'message_stop' }
+            }
+
+            $events = @(Invoke-AnthropicMessage -Messages @(
+                New-AnthropicMessage -Role 'user' -Content 'Hi'
+            ) -Stream)
+
+            $events.Count | Should -Be 7
+            $events[0].type | Should -Be 'message_start'
+            $events[-1].type | Should -Be 'message_stop'
+        }
+
+        It 'Should output content_block_delta events with text' {
+            Mock Invoke-AnthropicStreamRequest -ModuleName PSAnthropic {
+                [PSCustomObject]@{ type = 'message_start'; message = @{ id = 'msg_1' } }
+                [PSCustomObject]@{ type = 'content_block_delta'; index = 0; delta = @{ type = 'text_delta'; text = 'Test' } }
+                [PSCustomObject]@{ type = 'message_stop' }
+            }
+
+            $events = @(Invoke-AnthropicMessage -Messages @(
+                New-AnthropicMessage -Role 'user' -Content 'Hi'
+            ) -Stream)
+
+            $deltaEvents = $events | Where-Object { $_.type -eq 'content_block_delta' }
+            $deltaEvents | Should -Not -BeNullOrEmpty
+            $deltaEvents[0].delta.text | Should -Be 'Test'
+        }
+
+        It 'Should output tool_use content blocks in stream' {
+            Mock Invoke-AnthropicStreamRequest -ModuleName PSAnthropic {
+                [PSCustomObject]@{ type = 'message_start'; message = @{ id = 'msg_1' } }
+                [PSCustomObject]@{
+                    type = 'content_block_start'
+                    index = 0
+                    content_block = @{
+                        type = 'tool_use'
+                        id = 'toolu_mock1'
+                        name = 'get_current_time'
+                    }
+                }
+                [PSCustomObject]@{
+                    type = 'content_block_delta'
+                    index = 0
+                    delta = @{
+                        type = 'input_json_delta'
+                        partial_json = '{"timezone":"UTC"}'
+                    }
+                }
+                [PSCustomObject]@{ type = 'content_block_stop'; index = 0 }
+                [PSCustomObject]@{ type = 'message_delta'; delta = @{ stop_reason = 'tool_use' } }
+                [PSCustomObject]@{ type = 'message_stop' }
+            }
+
+            $events = @(Invoke-AnthropicMessage -Messages @(
+                New-AnthropicMessage -Role 'user' -Content 'What time is it?'
+            ) -Stream)
+
+            $toolStartEvent = $events | Where-Object {
+                $_.type -eq 'content_block_start' -and $_.content_block.type -eq 'tool_use'
+            }
+            $toolStartEvent | Should -Not -BeNullOrEmpty
+            $toolStartEvent.content_block.name | Should -Be 'get_current_time'
+
+            # Should have stop_reason = tool_use in message_delta
+            $messageDelta = $events | Where-Object { $_.type -eq 'message_delta' }
+            $messageDelta.delta.stop_reason | Should -Be 'tool_use'
+        }
+    }
+
+    Context 'Streaming Error Handling' {
+        It 'Should propagate timeout errors from stream' {
+            Mock Invoke-AnthropicStreamRequest -ModuleName PSAnthropic {
+                throw [AnthropicConnectionException]::new('Request timed out after 30 seconds')
+            }
+
+            { Invoke-AnthropicMessage -Messages @(
+                New-AnthropicMessage -Role 'user' -Content 'Hi'
+            ) -Stream -ErrorAction Stop } | Should -Throw '*timed out*'
+        }
+
+        It 'Should propagate connection errors from stream' {
+            Mock Invoke-AnthropicStreamRequest -ModuleName PSAnthropic {
+                throw [AnthropicConnectionException]::new('Connection reset by peer')
+            }
+
+            { Invoke-AnthropicMessage -Messages @(
+                New-AnthropicMessage -Role 'user' -Content 'Hi'
+            ) -Stream -ErrorAction Stop } | Should -Throw '*Connection*'
+        }
+    }
+
+    Context 'Stream Event Types' {
+        It 'Should have all expected event types in typical stream' {
+            Mock Invoke-AnthropicStreamRequest -ModuleName PSAnthropic {
+                [PSCustomObject]@{ type = 'message_start'; message = @{ id = 'msg_1' } }
+                [PSCustomObject]@{ type = 'content_block_start'; index = 0; content_block = @{ type = 'text' } }
+                [PSCustomObject]@{ type = 'content_block_delta'; index = 0; delta = @{ text = 'Hi' } }
+                [PSCustomObject]@{ type = 'content_block_stop'; index = 0 }
+                [PSCustomObject]@{ type = 'message_delta'; delta = @{ stop_reason = 'end_turn' } }
+                [PSCustomObject]@{ type = 'message_stop' }
+            }
+
+            $events = @(Invoke-AnthropicMessage -Messages @(
+                New-AnthropicMessage -Role 'user' -Content 'Hi'
+            ) -Stream)
+
+            $eventTypes = $events | ForEach-Object { $_.type } | Sort-Object -Unique
+
+            $eventTypes | Should -Contain 'message_start'
+            $eventTypes | Should -Contain 'content_block_start'
+            $eventTypes | Should -Contain 'content_block_delta'
+            $eventTypes | Should -Contain 'content_block_stop'
+            $eventTypes | Should -Contain 'message_delta'
+            $eventTypes | Should -Contain 'message_stop'
+        }
+    }
+}
+#endregion

@@ -24,7 +24,7 @@ function Add-AnthropicMessage {
         $conv = $conv | Add-AnthropicMessage -Role 'user' -Content 'Hi' -PassThru
     #>
     [CmdletBinding(DefaultParameterSetName = 'Content')]
-    [OutputType([AnthropicConversation])]
+    [OutputType('AnthropicConversation')]
     param(
         [Parameter(Mandatory, ValueFromPipeline, ValueFromPipelineByPropertyName)]
         [AnthropicConversation]$Conversation,

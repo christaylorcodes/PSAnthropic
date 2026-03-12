@@ -1,12 +1,12 @@
 # PSAnthropic
 
-![PSAnthropic](media/hero.png)
+![PSAnthropic](media/Logo.png)
 
-PowerShell client for the Anthropic Messages API.
+PowerShell 7+ client for the Anthropic Messages API.
 
 ## Overview
 
-PSAnthropic provides a PowerShell 7+ interface to the [Anthropic Messages API](https://docs.anthropic.com/en/api/messages). It works with:
+PSAnthropic provides a PowerShell interface to the [Anthropic Messages API](https://docs.anthropic.com/en/api/messages). It works with:
 
 - **[Ollama](https://ollama.com/)** - Local LLMs via [Anthropic API compatibility](https://docs.ollama.com/api/anthropic-compatibility)
 - **Anthropic Cloud** - Claude models directly
@@ -40,20 +40,14 @@ $response = Invoke-AnthropicMessage -Messages @(
 )
 
 # Get the response text
-$response | Get-AnthropicResponseText
+$response.Answer
 ```
 
-## Features
+## Key Features
 
-### Basic Messaging
+### Streaming Responses
 
-```powershell
-$response = Invoke-AnthropicMessage -Messages @(
-    New-AnthropicMessage -Role 'user' -Content 'Explain recursion'
-) -System 'You are a programming tutor. Be concise.'
-```
-
-### Streaming
+Real-time token streaming with Server-Sent Events (SSE):
 
 ```powershell
 Invoke-AnthropicMessage -Messages @(
@@ -65,25 +59,24 @@ Invoke-AnthropicMessage -Messages @(
 }
 ```
 
-### Conversations
+### Tool Calling
+
+Built-in standard tools for file operations, shell commands, and web fetching:
 
 ```powershell
-$conv = New-AnthropicConversation -UserMessage 'Hello!' -SystemPrompt 'You are helpful.'
-$response = Invoke-AnthropicMessage -Messages $conv.Messages -System $conv.SystemPrompt
-
-Add-AnthropicMessage -Conversation $conv -Response $response
-Add-AnthropicMessage -Conversation $conv -Role 'user' -Content 'Tell me more.'
+$tools = Get-AnthropicStandardTools
+$response = Invoke-AnthropicMessage -Messages $messages -Tools $tools -AllowShell
 ```
 
-### Extended Thinking
+Auto-generate tool definitions from any PowerShell command:
 
 ```powershell
-$response = Invoke-AnthropicMessage -Messages @(
-    New-AnthropicMessage -Role 'user' -Content 'Solve this step by step: 15% of 85'
-) -Thinking -ThinkingBudget 1024
+$tool = New-AnthropicToolFromCommand -CommandName 'Get-Process'
 ```
 
-### Image Analysis
+### Vision / Image Analysis
+
+Analyze images with vision-capable models:
 
 ```powershell
 $response = Invoke-AnthropicMessage -Messages @(@{
@@ -95,65 +88,28 @@ $response = Invoke-AnthropicMessage -Messages @(@{
 }) -Model 'llava'
 ```
 
-## Documentation
+### Extended Thinking
 
-- [Tool Use Guide](docs/ToolUse.md) - Custom tools and tool-calling patterns
-- [Standard Tools](docs/StandardTools.md) - Built-in tools and safety levels
-- [Model Router](docs/Router.md) - Automatic model routing by task type
-- [Troubleshooting](docs/Troubleshooting.md) - Common errors and solutions
-- [Changelog](CHANGELOG.md) - Version history
+Enable model reasoning for complex problems (Claude 3+ models):
 
-## Available Functions
+```powershell
+$response = Invoke-AnthropicMessage -Messages @(
+    New-AnthropicMessage -Role 'user' -Content 'Solve this step by step: 15% of 85'
+) -Thinking -ThinkingBudget 1024
+```
 
-### Authentication
+### Model Router
 
-| Function | Description |
-|----------|-------------|
-| `Connect-Anthropic` | Initialize connection to API endpoint |
-| `Disconnect-Anthropic` | Clear connection state |
+Automatically route requests to different models based on task type:
 
-### Messages
-
-| Function | Description |
-|----------|-------------|
-| `Invoke-AnthropicMessage` | Send messages to the API |
-| `New-AnthropicMessage` | Create a message object |
-| `New-AnthropicConversation` | Start a conversation with optional system prompt |
-| `Add-AnthropicMessage` | Add messages to a conversation |
-
-### Tools
-
-| Function | Description |
-|----------|-------------|
-| `New-AnthropicTool` | Create a custom tool definition |
-| `New-AnthropicToolResult` | Create a tool result message |
-| `Get-AnthropicStandardTools` | Get pre-built standard tools |
-| `Invoke-AnthropicStandardTool` | Execute a standard tool call |
-
-### Content
-
-| Function | Description |
-|----------|-------------|
-| `New-AnthropicImageContent` | Create an image content block |
-
-### Utility
-
-| Function | Description |
-|----------|-------------|
-| `Get-AnthropicConnection` | Show current connection info |
-| `Get-AnthropicModel` | List available models |
-| `Get-AnthropicResponseText` | Extract text from response |
-| `Test-AnthropicEndpoint` | Health check endpoint |
-
-### Router
-
-| Function | Description |
-|----------|-------------|
-| `Set-AnthropicRouterConfig` | Configure model routing rules |
-| `Get-AnthropicRouterConfig` | View routing configuration |
-| `Clear-AnthropicRouterConfig` | Reset routing configuration |
-| `Invoke-AnthropicRouted` | Send messages with automatic routing |
-| `Get-AnthropicRouterLog` | View routing decision history |
+```powershell
+Set-AnthropicRouterConfig -Models @{
+    'code'    = 'qwen3-coder'
+    'chat'    = 'llama3'
+    'default' = 'llama3'
+}
+Invoke-AnthropicRouted -Messages $messages -TaskType 'code'
+```
 
 ## Configuration
 
@@ -174,30 +130,26 @@ Connect-Anthropic -Model 'qwen3-coder'
 # Specific server
 Connect-Anthropic -Server 'myserver:11434' -Model 'llama3'
 
-# Anthropic cloud
-Connect-Anthropic -Server 'api.anthropic.com' -ApiKey $key -Model 'claude-3-5-sonnet'
+# Anthropic Cloud
+Connect-Anthropic -Server 'api.anthropic.com' -ApiKey $key -Model 'claude-sonnet-4-20250514'
 ```
+
+## Documentation
+
+- **[Function Reference](docs/en-US/PSAnthropic.md)** - Complete list of all 23 cmdlets
+- [Tool Use Guide](docs/ToolUse.md) - Custom tools and tool-calling patterns
+- [Standard Tools](docs/StandardTools.md) - Built-in tools and safety levels
+- [Model Router](docs/Router.md) - Automatic model routing by task type
+- [Troubleshooting](docs/Troubleshooting.md) - Common errors and solutions
+- [Changelog](CHANGELOG.md) - Version history
 
 ## Ollama Compatibility
 
-This module is designed to work seamlessly with [Ollama's Anthropic compatibility layer](https://docs.ollama.com/api/anthropic-compatibility). When using Ollama:
+This module works seamlessly with [Ollama's Anthropic compatibility layer](https://docs.ollama.com/api/anthropic-compatibility).
 
-**Supported:**
+**Supported:** Messages API, streaming, tools/function calling, base64 images, system prompts, temperature/top_p/top_k
 
-- Messages API (`/v1/messages`)
-- Streaming
-- Tools/function calling
-- Base64 images
-- System prompts
-- Temperature, top_p, top_k
-
-**Not Supported by Ollama:**
-
-- Token counting endpoint
-- URL-based images (base64 only)
-- Cache control blocks
-- Batches API
-- PDF documents
+**Not Supported by Ollama:** Token counting, URL-based images, cache control, batches API, PDFs
 
 ## License
 

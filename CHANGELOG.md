@@ -47,7 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Tool Support
 - `New-AnthropicTool` - Create custom tool definitions
 - `New-AnthropicToolResult` - Format tool execution results
-- `Get-AnthropicStandardTools` - Pre-built standard tools (7 tools)
+- `Get-AnthropicStandardTools` - Pre-built standard tools (8 tools)
 - `Invoke-AnthropicStandardTool` - Execute standard tool calls
 - Shell safety levels (Restricted, ReadOnly, Standard, Full, Unsafe)
 - Sandboxed PowerShell execution via ConstrainedLanguage mode
@@ -78,6 +78,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `search_files` - Search files by name pattern
 - `search_content` - Search text within files
 - `get_current_time` - Get current date/time
+- `web_fetch` - Fetch and parse URL content
 
 ### Compatibility
 - PowerShell 7.0+ required

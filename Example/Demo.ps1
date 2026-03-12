@@ -9,7 +9,7 @@
 param(
     # Default to optimized 8k context model (less VRAM)
     # Options: llama3.1-8k (fast), qwen3-coder-8k (smart), qwen2.5-coder:7b, llama3.1:8b (128k ctx)
-    [string]$Model = 'qwen3-coder-8k:latest'
+    [string]$Model = 'qwen3:8b'
 )
 
 # Remove module first to avoid type definition conflicts when reloading
@@ -18,12 +18,12 @@ Remove-Module PSAnthropic -Force -ErrorAction SilentlyContinue
 Import-Module "$PSScriptRoot\PSAnthropic" -Force
 
 #region 1. Connection & Setup
-Write-Host "=== 1. Connection & Setup ===" -ForegroundColor Magenta
+Write-Host '=== 1. Connection & Setup ===' -ForegroundColor Magenta
 
 # Health check before connecting
-Write-Host "Testing endpoint..." -ForegroundColor Cyan
+Write-Host 'Testing endpoint...' -ForegroundColor Cyan
 if (Test-AnthropicEndpoint) {
-    Write-Host "[OK] Ollama is running" -ForegroundColor Green
+    Write-Host '[OK] Ollama is running' -ForegroundColor Green
 }
 else {
     Write-Host "[ERROR] Ollama not available - start it with 'ollama serve'" -ForegroundColor Red
@@ -45,9 +45,9 @@ Write-Host "`n=== 2. Basic Message ===" -ForegroundColor Magenta
 
 $response = Invoke-AnthropicMessage -Messages @(
     New-AnthropicMessage -Role 'user' -Content 'What is PowerShell in one sentence?'
-)
+) -Verbose
 
-Write-Host "Response:" -ForegroundColor Green
+Write-Host 'Response:' -ForegroundColor Green
 $response | Get-AnthropicResponseText
 #endregion
 
@@ -69,7 +69,7 @@ $response = Invoke-AnthropicMessage -Messages @(
     New-AnthropicMessage -Role 'user' -Content 'Give me one random word.'
 ) -Temperature 1.0 -MaxTokens 20
 
-Write-Host "Random word (temp=1.0):" -ForegroundColor Cyan
+Write-Host 'Random word (temp=1.0):' -ForegroundColor Cyan
 $response | Get-AnthropicResponseText
 #endregion
 
@@ -82,7 +82,7 @@ $response = Invoke-AnthropicMessage -Messages @(
     New-AnthropicMessage -Role 'user' -Content 'What is 15% of 85? Show your work.'
 ) -Thinking -ThinkingBudget 1024
 
-Write-Host "Response with thinking:" -ForegroundColor Cyan
+Write-Host 'Response with thinking:' -ForegroundColor Cyan
 
 # Check for thinking blocks in response
 $thinkingBlocks = $response.content | Where-Object { $_.type -eq 'thinking' }
@@ -96,7 +96,7 @@ $response | Get-AnthropicResponseText
 #region 5. Streaming
 Write-Host "`n=== 5. Streaming Response ===" -ForegroundColor Magenta
 
-Write-Host "Streaming: " -ForegroundColor Cyan -NoNewline
+Write-Host 'Streaming: ' -ForegroundColor Cyan -NoNewline
 Invoke-AnthropicMessage -Messages @(
     New-AnthropicMessage -Role 'user' -Content 'Write a haiku about coding.'
 ) -Stream | ForEach-Object {
@@ -104,7 +104,7 @@ Invoke-AnthropicMessage -Messages @(
         Write-Host $_.delta.text -NoNewline
     }
 }
-Write-Host ""
+Write-Host ''
 #endregion
 
 #region 6. Multi-turn Conversation
@@ -115,7 +115,7 @@ $conv = New-AnthropicConversation -UserMessage 'Hello! My name is Alex.' -System
 
 # First exchange
 $response = Invoke-AnthropicMessage -Messages $conv.Messages -System $conv.SystemPrompt
-Write-Host "User: Hello! My name is Alex." -ForegroundColor Cyan
+Write-Host 'User: Hello! My name is Alex.' -ForegroundColor Cyan
 Write-Host "Assistant: $($response | Get-AnthropicResponseText)" -ForegroundColor Green
 
 # Add response and continue
@@ -124,7 +124,7 @@ Add-AnthropicMessage -Conversation $conv -Role 'user' -Content 'What is my name?
 
 # Second exchange
 $response = Invoke-AnthropicMessage -Messages $conv.Messages -System $conv.SystemPrompt
-Write-Host "User: What is my name?" -ForegroundColor Cyan
+Write-Host 'User: What is my name?' -ForegroundColor Cyan
 Write-Host "Assistant: $($response | Get-AnthropicResponseText)" -ForegroundColor Green
 #endregion
 
@@ -134,25 +134,25 @@ Write-Host "`n=== 7. Image Content (Vision) ===" -ForegroundColor Magenta
 # Switch to vision model
 $originalModel = (Get-AnthropicConnection).Model
 Connect-Anthropic -Model 'llama3.2-vision:11b' -Force
-Write-Host "Switched to vision model: llama3.2-vision:11b" -ForegroundColor Cyan
+Write-Host 'Switched to vision model: llama3.2-vision:11b' -ForegroundColor Cyan
 
 # Create a simple test image (1x1 red pixel PNG)
-$demoBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg=="
+$demoBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg=='
 $imageContent = New-AnthropicImageContent -Base64 $demoBase64 -MediaType 'image/png'
 
-Write-Host "Created image content:" -ForegroundColor Gray
+Write-Host 'Created image content:' -ForegroundColor Gray
 Write-Host "  Type: $($imageContent.type)" -ForegroundColor Gray
 Write-Host "  Media: $($imageContent.source.media_type)" -ForegroundColor Gray
 
 # Send image to vision model
 Write-Host "`nAsking vision model to describe the image..." -ForegroundColor Cyan
 $response = Invoke-AnthropicMessage -Messages @(@{
-    role = 'user'
-    content = @(
-        @{ type = 'text'; text = 'What color is this image? Answer in one word.' }
-        $imageContent
-    )
-})
+        role    = 'user'
+        content = @(
+            @{ type = 'text'; text = 'What color is this image? Answer in one word.' }
+            $imageContent
+        )
+    })
 
 Write-Host "Vision response: $($response | Get-AnthropicResponseText)" -ForegroundColor Green
 
@@ -200,7 +200,7 @@ if ($response.stop_reason -eq 'tool_use') {
 
 #region 8b. Auto-Generate Tool from Command
 Write-Host "`n=== 8b. Auto-Generate Tool from PowerShell Command ===" -ForegroundColor Magenta
-Write-Host "New-AnthropicToolFromCommand creates tool definitions from existing cmdlets" -ForegroundColor Cyan
+Write-Host 'New-AnthropicToolFromCommand creates tool definitions from existing cmdlets' -ForegroundColor Cyan
 
 # Generate tool from Get-Date (shows type mapping and validation constraints)
 Write-Host "`nGenerating tool from Get-Date:" -ForegroundColor Yellow
@@ -208,7 +208,7 @@ $dateTool = New-AnthropicToolFromCommand -CommandName 'Get-Date' -IncludeParamet
 
 Write-Host "  Name: $($dateTool.name)" -ForegroundColor Gray
 Write-Host "  Description: $($dateTool.description)" -ForegroundColor Gray
-Write-Host "  Parameters:" -ForegroundColor Gray
+Write-Host '  Parameters:' -ForegroundColor Gray
 $dateTool.input_schema.properties.GetEnumerator() | ForEach-Object {
     $reqMark = if ($_.Key -in $dateTool.input_schema.required) { '*' } else { '' }
     $rangeInfo = if ($_.Value.minimum -and $_.Value.maximum) { " [$($_.Value.minimum)-$($_.Value.maximum)]" } else { '' }
@@ -235,25 +235,25 @@ $multiTools | ForEach-Object { Write-Host "  - $($_.name): $($_.description)" -F
 
 #region 8c. Response Object Enrichment
 Write-Host "`n=== 8c. Response Object Enrichment ===" -ForegroundColor Magenta
-Write-Host "Responses now include convenience properties for easier access" -ForegroundColor Cyan
+Write-Host 'Responses now include convenience properties for easier access' -ForegroundColor Cyan
 
 $response = Invoke-AnthropicMessage -Messages @(
     New-AnthropicMessage -Role 'user' -Content 'What is 2+2? Answer briefly.'
 )
 
 Write-Host "`nResponse properties:" -ForegroundColor Yellow
-Write-Host "  .Answer  : Quick access to text content" -ForegroundColor Gray
+Write-Host '  .Answer  : Quick access to text content' -ForegroundColor Gray
 Write-Host "    Value  : $($response.Answer)" -ForegroundColor Green
-Write-Host "  .History : Messages including this response (for continuation)" -ForegroundColor Gray
+Write-Host '  .History : Messages including this response (for continuation)' -ForegroundColor Gray
 Write-Host "    Count  : $($response.History.Count) messages" -ForegroundColor DarkGray
-Write-Host "  .ToolUse : Tool use blocks if present (null here)" -ForegroundColor Gray
+Write-Host '  .ToolUse : Tool use blocks if present (null here)' -ForegroundColor Gray
 Write-Host "    Value  : $(if($response.ToolUse) { $response.ToolUse.Count } else { 'None' })" -ForegroundColor DarkGray
 
 # Show .History in action
 Write-Host "`nUsing .History for conversation continuation:" -ForegroundColor Yellow
 $followUp = Invoke-AnthropicMessage -Messages ($response.History + @(
-    New-AnthropicMessage -Role 'user' -Content 'Now multiply that by 3.'
-))
+        New-AnthropicMessage -Role 'user' -Content 'Now multiply that by 3.'
+    ))
 Write-Host "  Follow-up answer: $($followUp.Answer)" -ForegroundColor Green
 #endregion
 
@@ -262,7 +262,7 @@ Write-Host "`n=== 9. Standard Tools ===" -ForegroundColor Magenta
 
 # Get pre-defined tools from module
 $standardTools = Get-AnthropicStandardTools
-Write-Host "Available standard tools:" -ForegroundColor Cyan
+Write-Host 'Available standard tools:' -ForegroundColor Cyan
 $standardTools | ForEach-Object { Write-Host "  - $($_.name)" -ForegroundColor Gray }
 
 # Use standard tools with automatic execution
@@ -292,23 +292,23 @@ while ($response.stop_reason -eq 'tool_use') {
     $response = Invoke-AnthropicMessage -Messages $messages -Tools $standardTools
 }
 
-Write-Host "Summary:" -ForegroundColor Green
+Write-Host 'Summary:' -ForegroundColor Green
 $response | Get-AnthropicResponseText
 #endregion
 
 #region 9b. Shell Safety Demo
 Write-Host "`n=== 9b. Shell Safety (Sandboxed vs Unsafe) ===" -ForegroundColor Magenta
-Write-Host "Shell commands run in a constrained runspace by default for security." -ForegroundColor Cyan
-Write-Host ""
-Write-Host "Sandboxed mode (default):" -ForegroundColor Yellow
-Write-Host "  - ConstrainedLanguage mode (blocks .NET type abuse)" -ForegroundColor Gray
-Write-Host "  - Curated whitelist of safe commands" -ForegroundColor Gray
-Write-Host "  - Timeout protection" -ForegroundColor Gray
-Write-Host ""
-Write-Host "Unsafe mode (-Unsafe switch):" -ForegroundColor DarkRed
-Write-Host "  - No restrictions, uses Invoke-Expression directly" -ForegroundColor Gray
-Write-Host "  - FOR TESTING ONLY!" -ForegroundColor Gray
-Write-Host ""
+Write-Host 'Shell commands run in a constrained runspace by default for security.' -ForegroundColor Cyan
+Write-Host ''
+Write-Host 'Sandboxed mode (default):' -ForegroundColor Yellow
+Write-Host '  - ConstrainedLanguage mode (blocks .NET type abuse)' -ForegroundColor Gray
+Write-Host '  - Curated whitelist of safe commands' -ForegroundColor Gray
+Write-Host '  - Timeout protection' -ForegroundColor Gray
+Write-Host ''
+Write-Host 'Unsafe mode (-Unsafe switch):' -ForegroundColor DarkRed
+Write-Host '  - No restrictions, uses Invoke-Expression directly' -ForegroundColor Gray
+Write-Host '  - FOR TESTING ONLY!' -ForegroundColor Gray
+Write-Host ''
 
 # Create a mock tool use object to demonstrate
 $mockToolUse = @{
@@ -319,20 +319,20 @@ $mockToolUse = @{
 }
 
 Write-Host "Testing command: Get-Date -Format 'yyyy-MM-dd HH:mm:ss'" -ForegroundColor Cyan
-Write-Host ""
+Write-Host ''
 
-Write-Host "  [Sandboxed]: " -ForegroundColor Yellow -NoNewline
+Write-Host '  [Sandboxed]: ' -ForegroundColor Yellow -NoNewline
 $resultSandboxed = Invoke-AnthropicStandardTool -ToolUse $mockToolUse -AllowShell -TimeoutSeconds 5
-Write-Host $resultSandboxed -ForegroundColor $(if($resultSandboxed -match '^Error:'){'Red'}else{'Green'})
+Write-Host $resultSandboxed -ForegroundColor $(if ($resultSandboxed -match '^Error:') { 'Red' }else { 'Green' })
 
-Write-Host "  [Unsafe]:    " -ForegroundColor Yellow -NoNewline
+Write-Host '  [Unsafe]:    ' -ForegroundColor Yellow -NoNewline
 $resultUnsafe = Invoke-AnthropicStandardTool -ToolUse $mockToolUse -AllowShell -Unsafe -TimeoutSeconds 5
-Write-Host $resultUnsafe -ForegroundColor $(if($resultUnsafe -match '^Error:'){'Red'}else{'Green'})
+Write-Host $resultUnsafe -ForegroundColor $(if ($resultUnsafe -match '^Error:') { 'Red' }else { 'Green' })
 
-Write-Host ""
+Write-Host ''
 
 # Demonstrate blocking dangerous .NET access with ConstrainedLanguage
-Write-Host "Testing .NET type access (blocked by ConstrainedLanguage):" -ForegroundColor Cyan
+Write-Host 'Testing .NET type access (blocked by ConstrainedLanguage):' -ForegroundColor Cyan
 $dangerousToolUse = @{
     name  = 'pwsh'
     input = @{
@@ -340,22 +340,22 @@ $dangerousToolUse = @{
     }
 }
 
-Write-Host "  Command: [System.IO.File]::Exists(...)" -ForegroundColor Gray
-Write-Host "  [Sandboxed]: " -ForegroundColor Yellow -NoNewline
+Write-Host '  Command: [System.IO.File]::Exists(...)' -ForegroundColor Gray
+Write-Host '  [Sandboxed]: ' -ForegroundColor Yellow -NoNewline
 $resultSandboxed = Invoke-AnthropicStandardTool -ToolUse $dangerousToolUse -AllowShell -TimeoutSeconds 5
-Write-Host $resultSandboxed -ForegroundColor $(if($resultSandboxed -match 'Error|not allowed'){'Green'}else{'Red'})
+Write-Host $resultSandboxed -ForegroundColor $(if ($resultSandboxed -match 'Error|not allowed') { 'Green' }else { 'Red' })
 
-Write-Host "  [Unsafe]:    " -ForegroundColor Yellow -NoNewline
+Write-Host '  [Unsafe]:    ' -ForegroundColor Yellow -NoNewline
 $resultUnsafe = Invoke-AnthropicStandardTool -ToolUse $dangerousToolUse -AllowShell -Unsafe -TimeoutSeconds 5
-Write-Host $resultUnsafe -ForegroundColor $(if($resultUnsafe -eq 'True' -or $resultUnsafe -eq 'False'){'DarkYellow'}else{'Gray'})
+Write-Host $resultUnsafe -ForegroundColor $(if ($resultUnsafe -eq 'True' -or $resultUnsafe -eq 'False') { 'DarkYellow' }else { 'Gray' })
 
-Write-Host ""
-Write-Host "ConstrainedLanguage mode prevents direct .NET type access for security." -ForegroundColor DarkGray
+Write-Host ''
+Write-Host 'ConstrainedLanguage mode prevents direct .NET type access for security.' -ForegroundColor DarkGray
 #endregion
 
 #region 9c. InvokeMode Parameter Demo
 Write-Host "`n=== 9c. Tool InvokeMode (Confirm/None/Auto) ===" -ForegroundColor Magenta
-Write-Host "Control how tools execute: Auto (default), Confirm (ask user), or None (dry-run)" -ForegroundColor Cyan
+Write-Host 'Control how tools execute: Auto (default), Confirm (ask user), or None (dry-run)' -ForegroundColor Cyan
 
 $mockToolUse = @{
     name  = 'read_file'
@@ -383,7 +383,7 @@ Write-Host "  Usage: Invoke-AnthropicStandardTool -ToolUse `$toolUse -InvokeMode
 
 #region 10. Multi-Tool Agent
 Write-Host "`n=== 10. Multi-Tool Agent ===" -ForegroundColor Magenta
-Write-Host "Letting model explore the codebase autonomously..." -ForegroundColor Cyan
+Write-Host 'Letting model explore the codebase autonomously...' -ForegroundColor Cyan
 
 $messages = @(
     New-AnthropicMessage -Role 'user' -Content "Explore $PSScriptRoot. Find all .ps1 files and tell me what this project does."
@@ -417,7 +417,7 @@ $response | Get-AnthropicResponseText
 
 #region 10b. Model Router Demo
 Write-Host "`n=== 10b. Model Router ===" -ForegroundColor Magenta
-Write-Host "Demonstrating automatic model routing based on task type" -ForegroundColor Cyan
+Write-Host 'Demonstrating automatic model routing based on task type' -ForegroundColor Cyan
 
 # Define router models
 $routerModels = @{
@@ -431,7 +431,7 @@ $missingModels = $routerModels.Values | Where-Object { $_ -notin $availableModel
 
 if ($missingModels) {
     Write-Warning "Router demo skipped - missing models: $($missingModels -join ', ')"
-    Write-Host "  Create optimized models with: docker exec ollama ollama create <name> -f /tmp/Modelfile" -ForegroundColor DarkGray
+    Write-Host '  Create optimized models with: docker exec ollama ollama create <name> -f /tmp/Modelfile' -ForegroundColor DarkGray
 }
 else {
     # Configure the router
@@ -490,7 +490,7 @@ if ($alternateModel) {
     $response | Get-AnthropicResponseText
 }
 else {
-    Write-Host "Only one model available, skipping switch demo" -ForegroundColor Yellow
+    Write-Host 'Only one model available, skipping switch demo' -ForegroundColor Yellow
 }
 #endregion
 
@@ -498,12 +498,18 @@ else {
 Write-Host "`n=== 12. Cleanup ===" -ForegroundColor Magenta
 
 # Demonstrate -WhatIf support (PowerShell 7+ best practice)
-Write-Host "Testing -WhatIf support:" -ForegroundColor Cyan
+Write-Host 'Testing -WhatIf support:' -ForegroundColor Cyan
 Disconnect-Anthropic -WhatIf
 
 # Actually disconnect
 Disconnect-Anthropic
-Write-Host "Disconnected." -ForegroundColor Green
+Write-Host 'Disconnected.' -ForegroundColor Green
 #endregion
 
 Write-Host "`n=== Demo Complete ===" -ForegroundColor Magenta
+
+
+$response = Invoke-AnthropicMessage -Messages @(
+    New-AnthropicMessage -Role 'user' -Content 'Give me a number under 1000 that has an "a" in its spelling?'
+)
+$response | Get-AnthropicResponseText

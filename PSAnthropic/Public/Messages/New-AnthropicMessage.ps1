@@ -24,7 +24,7 @@ function New-AnthropicMessage {
         # Creates a message with text and image content
     #>
     [CmdletBinding()]
-    [OutputType([AnthropicMessage])]
+    [OutputType('AnthropicMessage')]
     param(
         [Parameter(Mandatory)]
         [AnthropicRole]$Role,

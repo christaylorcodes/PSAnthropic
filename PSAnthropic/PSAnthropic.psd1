@@ -3,29 +3,29 @@
     # PowerShell client for the Anthropic Messages API
 
     # Script module or binary module file associated with this manifest.
-    RootModule = 'PSAnthropic.psm1'
+    RootModule        = 'PSAnthropic.psm1'
 
     # Script files (.ps1) that are run in the caller's environment prior to importing this module.
     # This ensures classes/enums are available to module consumers.
-    ScriptsToProcess = @('Classes.ps1')
+    ScriptsToProcess  = @('Classes.ps1')
 
     # Version number of this module.
-    ModuleVersion = '0.1.0'
+    ModuleVersion     = '0.1.0'
 
     # ID used to uniquely identify this module
-    GUID = 'a7b8c9d0-e1f2-3a4b-5c6d-7e8f9a0b1c2d'
+    GUID              = 'a7b8c9d0-e1f2-3a4b-5c6d-7e8f9a0b1c2d'
 
     # Author of this module
-    Author = 'Chris Taylor'
+    Author            = 'Chris Taylor'
 
     # Company or vendor of this module
-    CompanyName = 'ChrisTaylorCodes'
+    CompanyName       = 'ChrisTaylorCodes'
 
     # Copyright statement for this module
-    Copyright = '(c) 2026 Chris Taylor. MIT License.'
+    Copyright         = '(c) 2026 Chris Taylor. MIT License.'
 
     # Description of the functionality provided by this module
-    Description = 'PowerShell client for the Anthropic Messages API. Works with Ollama, Anthropic Cloud, and any compatible endpoint. Supports messages, streaming, tools, and images.'
+    Description       = 'PowerShell client for the Anthropic Messages API. Works with Ollama, Anthropic Cloud, and any compatible endpoint. Supports messages, streaming, tools, and images.'
 
     # Minimum version of the PowerShell engine required by this module
     PowerShellVersion = '7.0'
@@ -71,25 +71,25 @@
     )
 
     # Cmdlets to export from this module
-    CmdletsToExport = @()
+    CmdletsToExport   = @()
 
     # Variables to export from this module
     VariablesToExport = @()
 
     # Aliases to export from this module
-    AliasesToExport = @()
+    AliasesToExport   = @()
 
     # Private data to pass to the module specified in RootModule/ModuleToProcess
-    PrivateData = @{
+    PrivateData       = @{
         PSData = @{
             # Tags applied to this module for discoverability
-            Tags = @('Anthropic', 'Ollama', 'LLM', 'AI', 'API', 'Messages', 'Claude', 'LocalLLM')
+            Tags         = @('Anthropic', 'Ollama', 'LLM', 'AI', 'API', 'Messages', 'Claude', 'LocalLLM', 'ChrisTaylorCodes')
 
             # License URI
-            LicenseUri = 'https://github.com/christaylorcodes/PSAnthropic/blob/main/LICENSE'
+            LicenseUri   = 'https://github.com/christaylorcodes/PSAnthropic/blob/main/LICENSE'
 
             # Project URI
-            ProjectUri = 'https://github.com/christaylorcodes/PSAnthropic'
+            ProjectUri   = 'https://github.com/christaylorcodes/PSAnthropic'
 
             # Release notes
             ReleaseNotes = @'

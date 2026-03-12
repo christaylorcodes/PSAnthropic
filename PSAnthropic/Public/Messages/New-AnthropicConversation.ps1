@@ -17,7 +17,7 @@ function New-AnthropicConversation {
         Add-AnthropicMessage -Conversation $conv -Role 'user' -Content 'Ahoy!'
     #>
     [CmdletBinding()]
-    [OutputType([AnthropicConversation])]
+    [OutputType('AnthropicConversation')]
     param(
         [Parameter()]
         [string]$UserMessage,

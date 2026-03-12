@@ -14,7 +14,7 @@ function Get-AnthropicConnection {
         ConnectedAt : 1/23/2026 10:30:00 AM
     #>
     [CmdletBinding()]
-    [OutputType([AnthropicConnection])]
+    [OutputType('AnthropicConnection')]
     param()
 
     if (-not $script:AnthropicConnection) {

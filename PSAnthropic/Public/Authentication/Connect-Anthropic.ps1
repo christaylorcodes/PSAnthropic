@@ -33,7 +33,7 @@ function Connect-Anthropic {
         # Connects to Anthropic's cloud API (if needed)
     #>
     [CmdletBinding(SupportsShouldProcess)]
-    [OutputType([AnthropicConnection])]
+    [OutputType('AnthropicConnection')]
     param(
         [Parameter()]
         [string]$Server,

@@ -3,3 +3,9 @@ contact_links:
   - name: Documentation
     url: https://github.com/christaylorcodes/PSAnthropic#readme
     about: Check the README for usage examples and documentation
+  - name: Contributing Guide
+    url: https://github.com/christaylorcodes/PSAnthropic/blob/main/CONTRIBUTING.md
+    about: Learn how to contribute to this project
+  - name: AI Contributor Guide
+    url: https://github.com/christaylorcodes/PSAnthropic/blob/main/AGENTS.md
+    about: Instructions for AI coding agents contributing to this project

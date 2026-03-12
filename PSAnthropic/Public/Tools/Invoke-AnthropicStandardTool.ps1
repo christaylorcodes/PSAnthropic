@@ -317,6 +317,7 @@ function Invoke-EditorTool {
     $command = $ToolInput.command
     # Use resolved path if provided (already validated), otherwise use original
     $path = if ($ResolvedPath) { $ResolvedPath } else { $ToolInput.path }
+    # Note: $path is validated by caller, so Test-Path calls below are defensive checks
 
     switch ($command) {
         'view' {
@@ -581,16 +582,17 @@ function Invoke-GetTimeTool {
         $time = Get-Date
 
         if ($Timezone) {
-            try {
-                $tz = [System.TimeZoneInfo]::FindSystemTimeZoneById($Timezone)
-                $time = [System.TimeZoneInfo]::ConvertTime($time, $tz)
+            # Try UTC shorthand first
+            if ($Timezone -eq 'UTC') {
+                $time = $time.ToUniversalTime()
             }
-            catch {
-                # Try UTC shorthand
-                if ($Timezone -eq 'UTC') {
-                    $time = $time.ToUniversalTime()
+            else {
+                # Try to find timezone by ID
+                try {
+                    $tz = [System.TimeZoneInfo]::FindSystemTimeZoneById($Timezone)
+                    $time = [System.TimeZoneInfo]::ConvertTime($time, $tz)
                 }
-                else {
+                catch {
                     return "Error: Unknown timezone '$Timezone'. Use timezone IDs like 'UTC', 'Pacific Standard Time', 'Eastern Standard Time', etc."
                 }
             }
@@ -599,9 +601,9 @@ function Invoke-GetTimeTool {
         if ($Format) {
             return $time.ToString($Format)
         }
-        else {
-            return $time.ToString('yyyy-MM-dd HH:mm:ss') + $(if($Timezone){" ($Timezone)"}else{" (Local)"})
-        }
+
+        $suffix = if ($Timezone) { " ($Timezone)" } else { " (Local)" }
+        return $time.ToString('yyyy-MM-dd HH:mm:ss') + $suffix
     }
     catch {
         return "Error getting time: $_"
@@ -660,8 +662,12 @@ function Invoke-WebFetchTool {
                                  ($bytes[0] -eq 192 -and $bytes[1] -eq 168)
                 }
                 elseif ($addr.AddressFamily -eq 'InterNetworkV6') {
-                    # IPv6 loopback (::1) or link-local (fe80::)
-                    $isPrivate = $addr.IsIPv6LinkLocal -or [System.Net.IPAddress]::IsLoopback($addr)
+                    # IPv6 private/reserved ranges:
+                    # ::1 (loopback), fe80::/10 (link-local), fc00::/7 (unique local), fec0::/10 (site-local, deprecated)
+                    $ipv6Bytes = $addr.GetAddressBytes()
+                    $isUniqueLocal = ($ipv6Bytes[0] -band 0xfe) -eq 0xfc  # fc00::/7 (fc00:: - fdff::)
+                    $isSiteLocal = ($ipv6Bytes[0] -eq 0xfe) -and (($ipv6Bytes[1] -band 0xc0) -eq 0xc0)  # fec0::/10
+                    $isPrivate = $addr.IsIPv6LinkLocal -or [System.Net.IPAddress]::IsLoopback($addr) -or $isUniqueLocal -or $isSiteLocal
                 }
 
                 if ($isPrivate) {
@@ -785,8 +791,8 @@ function ConvertFrom-Html {
     $text = $text -replace '(?i)<h[456][^>]*>', "`n`n#### "
     $text = $text -replace '(?i)</h[456]>', "`n"
 
-    # Remove remaining HTML tags
-    $text = $text -replace '<[^>]+>', ''
+    # Remove remaining HTML tags (handles attributes containing > in quotes)
+    $text = $text -replace '<(?:[^>"'']+|"[^"]*"|''[^'']*'')*>', ''
 
     # Decode HTML entities
     $text = [System.Net.WebUtility]::HtmlDecode($text)

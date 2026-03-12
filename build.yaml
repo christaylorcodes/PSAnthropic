@@ -34,6 +34,10 @@ BuildWorkflow:
   publish:
     - publish_module_to_gallery
 
+  docs:
+    - Build_Module_ModuleBuilder
+    - Update_markdown_help_source
+    - Generate_MAML_from_markdown_help_source
 
 ####################################################
 #       Sampler Pipeline Configuration             #
@@ -77,6 +81,14 @@ Pester:
   PassThru: true
 
 ####################################################
+#       PlatyPS / Documentation Configuration      #
+####################################################
+
+HelpSourceFolder: docs
+HelpCultureInfo: en-US
+CopyHelpMamlToBuiltModuleBase: true
+
+####################################################
 #       PSScriptAnalyzer Configuration            #
 ####################################################
 
@@ -95,5 +107,5 @@ GitHubConfig:
   GitHubFilesToAdd:
     - 'CHANGELOG.md'
   GitHubConfigUserName: christaylorcodes
-  GitHubConfigUserEmail: chris@yourconnectedtech.com
+  GitHubConfigUserEmail: christaylorcodes@users.noreply.github.com
   UpdateChangelogOnPrerelease: false

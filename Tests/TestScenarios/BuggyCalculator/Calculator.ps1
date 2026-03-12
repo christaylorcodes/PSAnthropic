@@ -45,5 +45,4 @@ function Invoke-Calculator {
     return [math]::Round($result, $config.Prcision)  # Typo: Prcision instead of Precision
 }
 
-# Export for module use
-Export-ModuleMember -Function Invoke-Calculator -ErrorAction SilentlyContinue
+# Note: Export-ModuleMember removed - this file is dot-sourced by tests, not loaded as a module
