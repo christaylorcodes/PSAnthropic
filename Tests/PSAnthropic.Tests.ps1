@@ -19,12 +19,23 @@ BeforeDiscovery {
 }
 
 BeforeAll {
-    # Explicitly load classes first (needed for Pester's sandboxed environment)
-    $classesPath = Join-Path $PSScriptRoot '..' 'PSAnthropic' 'Classes.ps1'
-    . $classesPath
+    # Remove any existing PSAnthropic module to avoid "multiple modules loaded" errors
+    Get-Module PSAnthropic | Remove-Module -Force -ErrorAction SilentlyContinue
 
-    # Import the module with -Global to ensure it's available across Pester's scopes
-    $modulePath = Join-Path $PSScriptRoot '..' 'PSAnthropic'
+    # Prefer the built module (output/) if available, otherwise use source
+    $builtModule = Get-ChildItem -Path (Join-Path $PSScriptRoot '..' 'output' 'PSAnthropic') -Filter 'PSAnthropic.psd1' -Recurse -ErrorAction SilentlyContinue |
+        Sort-Object { [version](Split-Path (Split-Path $_.FullName -Parent) -Leaf) } -Descending -ErrorAction SilentlyContinue |
+        Select-Object -First 1
+
+    if ($builtModule) {
+        $modulePath = $builtModule.DirectoryName
+    } else {
+        $modulePath = Join-Path $PSScriptRoot '..' 'PSAnthropic'
+        # Explicitly load classes first (needed for Pester's sandboxed environment when using source)
+        $classesPath = Join-Path $modulePath 'Classes.ps1'
+        . $classesPath
+    }
+
     Import-Module $modulePath -Force -Global
 }
 
@@ -40,8 +51,9 @@ Describe 'Module Import' {
     }
 
     It 'Should export all functions from manifest' {
-        # Get expected functions from the manifest (source of truth)
-        $manifestPath = Join-Path $PSScriptRoot '..' 'PSAnthropic' 'PSAnthropic.psd1'
+        # Get expected functions from the loaded module's manifest (source of truth)
+        $module = Get-Module PSAnthropic
+        $manifestPath = Join-Path $module.ModuleBase 'PSAnthropic.psd1'
         $manifest = Import-PowerShellDataFile $manifestPath
         $expectedFunctions = $manifest.FunctionsToExport
 
