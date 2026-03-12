@@ -70,15 +70,20 @@ TaskHeader: |
 ####################################################
 
 Pester:
-  Script:
-    - Tests/PSAnthropic.Tests.ps1
-  ExcludeTag:
-    - Integration
-    - Generative
-  Tag:
-  OutputFile: output/testResults/testResults.xml
-  OutputFormat: NUnitXml
-  PassThru: true
+  Configuration:
+    Run:
+      Path:
+        - Tests/PSAnthropic.Tests.ps1
+    Filter:
+      ExcludeTag:
+        - Integration
+        - Generative
+    TestResult:
+      Enabled: true
+      OutputPath: output/testResults/testResults.xml
+      OutputFormat: NUnitXml
+    Output:
+      Verbosity: Detailed
 
 ####################################################
 #       PlatyPS / Documentation Configuration      #
