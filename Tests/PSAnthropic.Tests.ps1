@@ -23,20 +23,18 @@ BeforeAll {
     Get-Module PSAnthropic | Remove-Module -Force -ErrorAction SilentlyContinue
 
     # Prefer the built module (output/) if available, otherwise use source
-    $builtModule = Get-ChildItem -Path (Join-Path $PSScriptRoot '..' 'output' 'PSAnthropic') -Filter 'PSAnthropic.psd1' -Recurse -ErrorAction SilentlyContinue |
-        Sort-Object { [version](Split-Path (Split-Path $_.FullName -Parent) -Leaf) } -Descending -ErrorAction SilentlyContinue |
+    $builtManifest = Get-ChildItem -Path (Join-Path $PSScriptRoot '..' 'output' 'PSAnthropic') -Filter 'PSAnthropic.psd1' -Recurse -ErrorAction SilentlyContinue |
         Select-Object -First 1
 
-    if ($builtModule) {
-        $modulePath = $builtModule.DirectoryName
+    if ($builtManifest) {
+        Import-Module $builtManifest.FullName -Force -Global
     } else {
         $modulePath = Join-Path $PSScriptRoot '..' 'PSAnthropic'
         # Explicitly load classes first (needed for Pester's sandboxed environment when using source)
         $classesPath = Join-Path $modulePath 'Classes.ps1'
         . $classesPath
+        Import-Module $modulePath -Force -Global
     }
-
-    Import-Module $modulePath -Force -Global
 }
 
 AfterAll {
