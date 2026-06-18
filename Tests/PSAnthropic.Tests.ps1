@@ -87,10 +87,23 @@ Describe 'Connect-Anthropic' {
         $result.Model | Should -Be 'qwen3-coder'
     }
 
-    It 'Should strip http:// from server' {
+    It 'Should preserve the http:// scheme on the stored server' {
         $result = Connect-Anthropic -Server 'http://localhost:11434'
 
-        $result.Server | Should -Be 'localhost:11434'
+        $result.Server | Should -Be 'http://localhost:11434'
+    }
+
+    It 'Should preserve https:// and not downgrade to http (issue #1)' {
+        # Explicit -Model so no network auto-detection is attempted against the host
+        $result = Connect-Anthropic -Server 'https://api.anthropic.com' -Model 'claude-test'
+
+        $result.Server | Should -Be 'https://api.anthropic.com'
+
+        # The URL the module actually builds must keep https (this is the regression)
+        InModuleScope PSAnthropic {
+            $url = Get-NormalizedServerUrl -Server $script:AnthropicConnection.Server
+            $url | Should -Be 'https://api.anthropic.com'
+        }
     }
 
     It 'Should warn if already connected without -Force' {
