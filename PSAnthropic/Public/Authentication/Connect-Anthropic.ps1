@@ -85,8 +85,10 @@ function Connect-Anthropic {
         }
     }
 
-    # Normalize server URL (strip protocol for storage, we add it back in New-AnthropicUrl)
-    $resolvedServer = $resolvedServer -replace '^https?://', ''
+    # Store the server exactly as supplied so the user's scheme is preserved.
+    # New-AnthropicUrl normalizes lazily via Get-NormalizedServerUrl, which keeps an
+    # existing http://|https:// scheme and only defaults to http:// when none is present.
+    # Stripping here would lose https:// and silently downgrade requests to http (issue #1).
 
     # Build connection object (with ShouldProcess for -WhatIf support)
     if ($PSCmdlet.ShouldProcess("$resolvedServer with model $resolvedModel", 'Connect to Anthropic API')) {
