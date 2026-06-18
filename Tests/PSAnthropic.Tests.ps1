@@ -1955,3 +1955,171 @@ Describe 'Streaming (Mock-Based)' {
     }
 }
 #endregion
+
+#region Capability-aware backend behavior (v0.2.0)
+
+Describe 'Provider detection and headers' {
+    BeforeEach { Disconnect-Anthropic -ErrorAction SilentlyContinue }
+
+    It 'Detects Anthropic Cloud from the host' {
+        $c = Connect-Anthropic -Server 'https://api.anthropic.com' -ApiKey 'sk-test' -Model 'claude-test' -Force
+        $c.Provider | Should -Be 'Anthropic'
+    }
+
+    It 'Detects Ollama from localhost' {
+        $c = Connect-Anthropic -Server 'localhost:11434' -Model 'llama3' -Force
+        $c.Provider | Should -Be 'Ollama'
+    }
+
+    It 'Honors an explicit -Provider override' {
+        $c = Connect-Anthropic -Server 'https://api.anthropic.com' -ApiKey 'sk-test' -Model 'm' -Provider 'Generic' -Force
+        $c.Provider | Should -Be 'Generic'
+    }
+
+    It 'Sets anthropic-beta and a custom anthropic-version on the connection headers' {
+        Connect-Anthropic -Server 'api.anthropic.com' -ApiKey 'sk-test' -Model 'm' -Beta 'a-1', 'b-2' -AnthropicVersion '2099-01-01' -Force | Out-Null
+        InModuleScope PSAnthropic {
+            $script:AnthropicConnection.Headers['anthropic-beta'] | Should -Be 'a-1,b-2'
+            $script:AnthropicConnection.Headers['anthropic-version'] | Should -Be '2099-01-01'
+        }
+    }
+}
+
+Describe 'No hardcoded model lists (regression)' {
+    It 'Module source contains no retired Claude model IDs' {
+        $module = Get-Module PSAnthropic
+        $files = Get-ChildItem -Path $module.ModuleBase -Recurse -Include '*.ps1', '*.psm1' -ErrorAction SilentlyContinue
+        $content = ($files | Get-Content -Raw) -join "`n"
+        foreach ($retired in @('claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022', 'claude-3-opus-20240229')) {
+            $content | Should -Not -Match ([regex]::Escape($retired)) -Because "$retired is retired and must not be hardcoded"
+        }
+    }
+}
+
+Describe 'Capability-aware request shaping' {
+    Context 'Ollama backend' {
+        BeforeAll { Connect-Anthropic -Server 'localhost:11434' -Model 'llama3' -Force | Out-Null }
+
+        It 'Uses enabled thinking + budget, keeps sampling, drops tool_choice/metadata/output_config/cache' {
+            InModuleScope PSAnthropic {
+                $script:CapturedBody = $null
+                Mock Invoke-AnthropicWebRequest {
+                    $script:CapturedBody = $Body
+                    [pscustomobject]@{ Content = (@{ id = 'm'; role = 'assistant'; content = @(@{ type = 'text'; text = 'ok' }); stop_reason = 'end_turn'; usage = @{} } | ConvertTo-Json -Depth 8) }
+                }
+                Invoke-AnthropicMessage -Messages @(@{ role = 'user'; content = 'hi' }) -Temperature 0.3 -Thinking -ThinkingBudget 500 -ToolChoice 'auto' -Metadata @{ user_id = 'u' } -Effort high -CacheControl -ResponseSchema @{ type = 'object' } -WarningAction SilentlyContinue | Out-Null
+                $script:CapturedBody.thinking.type | Should -Be 'enabled'
+                $script:CapturedBody.thinking.budget_tokens | Should -Be 500
+                $script:CapturedBody.temperature | Should -Be 0.3
+                $script:CapturedBody.ContainsKey('tool_choice') | Should -BeFalse
+                $script:CapturedBody.ContainsKey('metadata') | Should -BeFalse
+                $script:CapturedBody.ContainsKey('output_config') | Should -BeFalse
+                $script:CapturedBody.ContainsKey('cache_control') | Should -BeFalse
+            }
+        }
+
+        It 'Sends Ollama-specific num_ctx (-NumCtx) in options' {
+            InModuleScope PSAnthropic {
+                $script:CapturedBody = $null
+                Mock Invoke-AnthropicWebRequest {
+                    $script:CapturedBody = $Body
+                    [pscustomobject]@{ Content = (@{ id = 'm'; role = 'assistant'; content = @(@{ type = 'text'; text = 'ok' }); stop_reason = 'end_turn'; usage = @{} } | ConvertTo-Json -Depth 8) }
+                }
+                Invoke-AnthropicMessage -Messages @(@{ role = 'user'; content = 'hi' }) -NumCtx 8192 -WarningAction SilentlyContinue | Out-Null
+                $script:CapturedBody.options.num_ctx | Should -Be 8192
+            }
+        }
+    }
+
+    Context 'Anthropic adaptive-only model' {
+        BeforeAll { Connect-Anthropic -Server 'api.anthropic.com' -ApiKey 'sk-test' -Model 'claude-opus-4-8' -Force | Out-Null }
+
+        It 'Uses adaptive thinking + effort, drops sampling, keeps tool_choice/metadata/caching/format' {
+            InModuleScope PSAnthropic {
+                Mock Get-AnthropicModelCapability {
+                    @{ SupportsAdaptiveThinking = $true; SupportsEnabledThinking = $false; SupportsEffort = $true
+                        SupportsStructuredOutput = $true; SupportsVision = $true; SupportsSampling = $false
+                        SupportsToolChoice = $true; SupportsMetadata = $true; SupportsCaching = $true
+                        MaxOutputTokens = 64000; Source = 'api'
+                    }
+                }
+                $script:CapturedBody = $null
+                Mock Invoke-AnthropicWebRequest {
+                    $script:CapturedBody = $Body
+                    [pscustomobject]@{ Content = (@{ id = 'm'; role = 'assistant'; content = @(@{ type = 'text'; text = 'ok' }); stop_reason = 'end_turn'; usage = @{} } | ConvertTo-Json -Depth 8) }
+                }
+                Invoke-AnthropicMessage -Messages @(@{ role = 'user'; content = 'hi' }) -Temperature 0.5 -Thinking -ThinkingDisplay summarized -Effort high -ToolChoice 'auto' -Metadata @{ user_id = 'u' } -CacheControl -ResponseSchema @{ type = 'object' } -WarningAction SilentlyContinue | Out-Null
+                $script:CapturedBody.thinking.type | Should -Be 'adaptive'
+                $script:CapturedBody.thinking.display | Should -Be 'summarized'
+                $script:CapturedBody.output_config.effort | Should -Be 'high'
+                $script:CapturedBody.output_config.format.type | Should -Be 'json_schema'
+                $script:CapturedBody.cache_control.type | Should -Be 'ephemeral'
+                $script:CapturedBody.metadata.user_id | Should -Be 'u'
+                $script:CapturedBody.ContainsKey('temperature') | Should -BeFalse
+                $script:CapturedBody.tool_choice.type | Should -Be 'auto'
+            }
+        }
+
+        It 'Flags a refusal via .Refused and returns empty Answer' {
+            InModuleScope PSAnthropic {
+                Mock Get-AnthropicModelCapability {
+                    @{ SupportsAdaptiveThinking = $true; SupportsEnabledThinking = $false; SupportsEffort = $true
+                        SupportsStructuredOutput = $true; SupportsVision = $true; SupportsSampling = $false
+                        SupportsToolChoice = $true; SupportsMetadata = $true; SupportsCaching = $true
+                        MaxOutputTokens = 64000; Source = 'api'
+                    }
+                }
+                Mock Invoke-AnthropicWebRequest {
+                    [pscustomobject]@{ Content = (@{ id = 'm'; role = 'assistant'; content = @(); stop_reason = 'refusal'; stop_details = @{ category = 'cyber' }; usage = @{} } | ConvertTo-Json -Depth 8) }
+                }
+                $resp = Invoke-AnthropicMessage -Messages @(@{ role = 'user'; content = 'hi' }) -WarningAction SilentlyContinue
+                $resp.Refused | Should -BeTrue
+                $resp.Answer | Should -BeNullOrEmpty
+            }
+        }
+
+        It 'Omits Ollama-only num_ctx (-NumCtx) and warns on Anthropic' {
+            InModuleScope PSAnthropic {
+                Mock Get-AnthropicModelCapability {
+                    @{ SupportsAdaptiveThinking = $true; SupportsEnabledThinking = $false; SupportsEffort = $true
+                        SupportsStructuredOutput = $true; SupportsVision = $true; SupportsSampling = $false
+                        SupportsToolChoice = $true; SupportsMetadata = $true; SupportsCaching = $true
+                        MaxOutputTokens = 64000; Source = 'api'
+                    }
+                }
+                $script:CapturedBody = $null
+                Mock Invoke-AnthropicWebRequest {
+                    $script:CapturedBody = $Body
+                    [pscustomobject]@{ Content = (@{ id = 'm'; role = 'assistant'; content = @(@{ type = 'text'; text = 'ok' }); stop_reason = 'end_turn'; usage = @{} } | ConvertTo-Json -Depth 8) }
+                }
+                Invoke-AnthropicMessage -Messages @(@{ role = 'user'; content = 'hi' }) -NumCtx 8192 -WarningVariable numCtxWarn -WarningAction SilentlyContinue | Out-Null
+                $script:CapturedBody.ContainsKey('options') | Should -BeFalse
+                $numCtxWarn | Should -Not -BeNullOrEmpty
+                "$numCtxWarn" | Should -Match 'NumCtx'
+            }
+        }
+    }
+}
+
+Describe 'Get-AnthropicTokenCount' {
+    It 'Warns and returns nothing on a non-Anthropic backend' {
+        Connect-Anthropic -Server 'localhost:11434' -Model 'llama3' -Force | Out-Null
+        $w = $null
+        $r = Get-AnthropicTokenCount -Messages @(@{ role = 'user'; content = 'hi' }) -WarningVariable w -WarningAction SilentlyContinue
+        $r | Should -BeNullOrEmpty
+        $w | Should -Not -BeNullOrEmpty
+    }
+
+    It 'Returns input_tokens on Anthropic' {
+        Connect-Anthropic -Server 'api.anthropic.com' -ApiKey 'sk-test' -Model 'claude-opus-4-8' -Force | Out-Null
+        InModuleScope PSAnthropic {
+            Mock Invoke-AnthropicWebRequest {
+                [pscustomobject]@{ Content = (@{ input_tokens = 42 } | ConvertTo-Json) }
+            }
+            $count = Get-AnthropicTokenCount -Messages @(@{ role = 'user'; content = 'hi' })
+            $count | Should -Be 42
+        }
+    }
+}
+
+#endregion

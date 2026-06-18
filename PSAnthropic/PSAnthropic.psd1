@@ -10,7 +10,7 @@
     ScriptsToProcess  = @('Classes.ps1')
 
     # Version number of this module.
-    ModuleVersion     = '0.1.0'
+    ModuleVersion     = '0.2.0'
 
     # ID used to uniquely identify this module
     GUID              = 'a7b8c9d0-e1f2-3a4b-5c6d-7e8f9a0b1c2d'
@@ -25,7 +25,7 @@
     Copyright         = '(c) 2026 Chris Taylor. MIT License.'
 
     # Description of the functionality provided by this module
-    Description       = 'PowerShell client for the Anthropic Messages API. Works with Ollama, Anthropic Cloud, and any compatible endpoint. Supports messages, streaming, tools, and images.'
+    Description       = 'PowerShell client for the Anthropic Messages API. Works with Ollama, Anthropic Cloud, and any compatible endpoint. Capability-aware: discovers models and shapes requests to each backend (adaptive thinking, effort, prompt caching, structured outputs, token counting). Supports messages, streaming, tools, and images.'
 
     # Minimum version of the PowerShell engine required by this module
     PowerShellVersion = '7.0'
@@ -58,6 +58,7 @@
         # Utility
         'Get-AnthropicConnection'
         'Get-AnthropicModel'
+        'Get-AnthropicTokenCount'
         'Get-AnthropicResponseText'
         'Test-AnthropicEndpoint'
         'Clear-AnthropicRunspaceCache'
@@ -93,6 +94,15 @@
 
             # Release notes
             ReleaseNotes = @'
+## 0.2.0
+- Capability-aware requests: shapes fields to what each backend/model supports
+- Backend auto-detection (Provider) on Connect-Anthropic; live model discovery
+  (Anthropic GET /v1/models, Ollama /api/tags) - no hardcoded model lists
+- Adaptive thinking + Effort on current Anthropic models; enabled+budget on Ollama
+- Prompt caching, structured outputs, metadata, per-request beta headers
+- Get-AnthropicTokenCount (POST /v1/messages/count_tokens)
+- Refusal handling (.Refused) and configurable anthropic-version
+
 ## 0.1.0 - Initial Release
 - Core messaging via POST /v1/messages
 - Streaming support with SSE parsing

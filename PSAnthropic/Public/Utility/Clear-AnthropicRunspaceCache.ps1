@@ -32,4 +32,11 @@ function Clear-AnthropicRunspaceCache {
     # Call the internal Clear-RunspaceCache function
     Clear-RunspaceCache
     Write-Verbose "Runspace cache cleared"
+
+    # Also clear any cached model/capability discovery on the active connection so
+    # the next request re-discovers (equivalent to Get-AnthropicModel -Refresh).
+    if ($script:AnthropicConnection -and $script:AnthropicConnection.Cache) {
+        $script:AnthropicConnection.Cache.Clear()
+        Write-Verbose "Connection discovery cache cleared"
+    }
 }

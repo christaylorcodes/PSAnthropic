@@ -1,60 +1,72 @@
 function Get-AnthropicModel {
     <#
     .SYNOPSIS
-        Lists available models from the Ollama server.
+        Lists available models from the connected backend.
     .DESCRIPTION
-        Queries the Ollama /api/tags endpoint to list all available models.
-        Note: This is Ollama-specific and won't work with Anthropic's cloud API.
+        Discovers models from whichever backend the connection points at, so the
+        module never relies on a hardcoded model list:
+
+        - Anthropic Cloud (Provider 'Anthropic'): queries GET /v1/models (paginated).
+        - Ollama / Generic: queries the Ollama /api/tags endpoint.
+
+        Results are cached on the connection for a few minutes; use -Refresh to
+        force a live re-query.
     .PARAMETER Filter
-        Optional filter string to match model names.
+        Optional filter string to match model names (substring, case-insensitive).
+    .PARAMETER Refresh
+        Bypass the cache and re-query the backend.
     .EXAMPLE
         Get-AnthropicModel
-        # Lists all available models
+        # Lists all available models for the connected backend
     .EXAMPLE
-        Get-AnthropicModel -Filter 'llama'
-        # Lists models containing 'llama' in the name
+        Get-AnthropicModel -Filter 'opus'
+        # Lists models whose name contains 'opus'
+    .EXAMPLE
+        Get-AnthropicModel -Refresh
+        # Forces a fresh query, bypassing the cache
     #>
     [CmdletBinding()]
     [OutputType([PSCustomObject[]])]
     param(
         [Parameter()]
-        [string]$Filter
+        [string]$Filter,
+
+        [Parameter()]
+        [switch]$Refresh
     )
 
     Assert-AnthropicConnection
 
-    # Build URL for Ollama tags endpoint
-    $baseUrl = Get-NormalizedServerUrl -Server $script:AnthropicConnection.Server
-    $uri = Join-Url -Path $baseUrl -ChildPath '/api/tags'
+    $connection = $script:AnthropicConnection
+    if (-not $connection.Cache) { $connection.Cache = @{} }
+    $cache = $connection.Cache
+    $cacheTtl = [timespan]::FromMinutes(5)
 
-    try {
-        $result = Invoke-RestMethod -Uri $uri -Method GET -TimeoutSec 30 -ErrorAction Stop
-
-        $models = $result.models | ForEach-Object {
-            [PSCustomObject]@{
-                Name       = $_.name
-                Size       = [math]::Round($_.size / 1GB, 2)
-                SizeGB     = "$([math]::Round($_.size / 1GB, 2)) GB"
-                ModifiedAt = $_.modified_at
-                Family     = $_.details.family
-                Parameters = $_.details.parameter_size
-                Quantization = $_.details.quantization_level
-            }
-        }
-
-        # Apply filter if specified
-        if ($Filter) {
-            $models = $models | Where-Object { $_.Name -like "*$Filter*" }
-        }
-
-        $models | Sort-Object Name
+    # Serve from cache when fresh
+    if (-not $Refresh -and $cache.ContainsKey('models') -and $cache.ContainsKey('models_at') -and
+        ((Get-Date) - $cache['models_at']) -lt $cacheTtl) {
+        $models = $cache['models']
     }
-    catch {
-        if ($_.Exception.Message -like '*404*' -or $_.Exception.Message -like '*No such host*') {
-            Write-Warning "Could not reach Ollama at $uri. Is Ollama running?"
+    else {
+        $models = if ($connection.Provider -eq 'Anthropic') {
+            Get-AnthropicModelFromApi
         }
         else {
-            Write-Error "Failed to get models: $_"
+            Get-AnthropicModelFromOllama
+        }
+
+        if ($null -ne $models) {
+            $cache['models'] = @($models)
+            $cache['models_at'] = Get-Date
         }
     }
+
+    if (-not $models) { return }
+
+    # Apply filter if specified
+    if ($Filter) {
+        $models = $models | Where-Object { $_.Name -like "*$Filter*" }
+    }
+
+    $models | Sort-Object Name
 }

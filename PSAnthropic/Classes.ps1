@@ -15,16 +15,31 @@ enum AnthropicRole {
 class AnthropicConnection {
     [string]$Server
     [string]$Model
+    [string]$Provider           # 'Anthropic' | 'Ollama' | 'Generic' - drives capability-aware request shaping
     hidden [hashtable]$Headers  # Hidden to prevent accidental API key exposure
+    hidden [hashtable]$Cache    # Discovery + capability cache (models, per-model capabilities). Hidden to keep formatting clean.
     [datetime]$ConnectedAt
     [bool]$HasApiKey
 
-    AnthropicConnection() { }
+    AnthropicConnection() {
+        $this.Provider = 'Generic'
+        $this.Cache = @{}
+    }
 
     AnthropicConnection([string]$server, [string]$model, [hashtable]$headers) {
+        $this.Init($server, $model, $headers, 'Generic')
+    }
+
+    AnthropicConnection([string]$server, [string]$model, [hashtable]$headers, [string]$provider) {
+        $this.Init($server, $model, $headers, $provider)
+    }
+
+    hidden [void] Init([string]$server, [string]$model, [hashtable]$headers, [string]$provider) {
         $this.Server = $server
         $this.Model = $model
         $this.Headers = $headers
+        $this.Provider = $provider
+        $this.Cache = @{}
         $this.ConnectedAt = Get-Date
         $this.HasApiKey = [bool]$headers['X-Api-Key']
     }

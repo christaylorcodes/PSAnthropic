@@ -3,41 +3,35 @@ function Register-AnthropicArgumentCompleters {
     .SYNOPSIS
         Registers argument completers for PSAnthropic commands.
     .DESCRIPTION
-        Provides dynamic tab-completion for Model parameters that fetches available
-        models from the connected Ollama server, with fallback to common model names.
+        Provides dynamic tab-completion for Model parameters by discovering models
+        from the connected backend (Anthropic Cloud /v1/models or Ollama /api/tags)
+        via Get-AnthropicModel, which is cache-backed. No model names are hardcoded:
+        when not connected, completion simply offers nothing rather than suggesting
+        stale or retired model IDs.
     #>
     [CmdletBinding()]
     param()
 
-    # Model completer - dynamically fetches from server or uses fallback list
+    # Model completer - discovers live from the connected backend (no hardcoded list)
     $modelCompleter = {
         param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
 
         $models = @()
 
-        # Try to get models from connected server
+        # Discover from the connected backend (cache-backed; returns nothing if not connected)
         if ($script:AnthropicConnection) {
             try {
-                $ollamaModels = Get-AnthropicModel -ErrorAction SilentlyContinue
-                if ($ollamaModels) {
-                    $models = @($ollamaModels | ForEach-Object {
-                        if ($_.name) { $_.name } elseif ($_.model) { $_.model } else { $_ }
-                    })
+                $discovered = Get-AnthropicModel -ErrorAction SilentlyContinue
+                if ($discovered) {
+                    $models = @($discovered | ForEach-Object {
+                            if ($_.Name) { $_.Name } elseif ($_.model) { $_.model } else { $_ }
+                        })
                 }
             }
             catch { }
         }
 
-        # Fallback to common models
-        if ($models.Count -eq 0) {
-            $models = @(
-                'llama3.3', 'llama3.2', 'llama3.1', 'llama3', 'mistral', 'mixtral',
-                'codellama', 'deepseek-coder', 'qwen2.5', 'qwen2.5-coder', 'phi3', 'gemma2',
-                'claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022', 'claude-3-opus-20240229'
-            )
-        }
-
-        $models | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+        $models | Where-Object { $_ -like "$wordToComplete*" } | Sort-Object -Unique | ForEach-Object {
             [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
         }
     }

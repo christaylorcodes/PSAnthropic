@@ -1,4 +1,4 @@
----
+﻿---
 Module Name: PSAnthropic
 Module Guid: a7b8c9d0-e1f2-3a4b-5c6d-7e8f9a0b1c2d
 Download Help Link: {{ Update Download Link }}
@@ -12,71 +12,74 @@ Locale: en-US
 
 ## PSAnthropic Cmdlets
 ### [Add-AnthropicMessage](Add-AnthropicMessage.md)
-Adds a message to an existing conversation.
+{{ Fill in the Description }}
 
 ### [Clear-AnthropicRouterConfig](Clear-AnthropicRouterConfig.md)
-Clears the router configuration and disables routing.
+{{ Fill in the Description }}
 
 ### [Clear-AnthropicRunspaceCache](Clear-AnthropicRunspaceCache.md)
-Clears the cached runspaces used by safe command execution.
+{{ Fill in the Description }}
 
 ### [Connect-Anthropic](Connect-Anthropic.md)
-Establishes a connection to an Anthropic-compatible API endpoint.
+{{ Fill in the Description }}
 
 ### [Disconnect-Anthropic](Disconnect-Anthropic.md)
-Clears the current Anthropic API connection.
+{{ Fill in the Description }}
 
 ### [Get-AnthropicConnection](Get-AnthropicConnection.md)
-Shows the current Anthropic API connection settings.
+{{ Fill in the Description }}
 
 ### [Get-AnthropicModel](Get-AnthropicModel.md)
-Lists available models from the Ollama server.
+{{ Fill in the Description }}
 
 ### [Get-AnthropicResponseText](Get-AnthropicResponseText.md)
-Extracts text content from an Anthropic API response.
+{{ Fill in the Description }}
 
 ### [Get-AnthropicRouterConfig](Get-AnthropicRouterConfig.md)
-Gets the current router configuration.
+{{ Fill in the Description }}
 
 ### [Get-AnthropicRouterLog](Get-AnthropicRouterLog.md)
-Reads and analyzes the router log.
+{{ Fill in the Description }}
 
 ### [Get-AnthropicStandardTools](Get-AnthropicStandardTools.md)
-Returns a set of standard tools for common operations.
+{{ Fill in the Description }}
+
+### [Get-AnthropicTokenCount](Get-AnthropicTokenCount.md)
+{{ Fill in the Description }}
 
 ### [Invoke-AnthropicMessage](Invoke-AnthropicMessage.md)
-Sends messages to the Anthropic Messages API (POST /v1/messages).
+{{ Fill in the Description }}
 
 ### [Invoke-AnthropicRouted](Invoke-AnthropicRouted.md)
-Sends messages using automatic model routing based on task type.
+{{ Fill in the Description }}
 
 ### [Invoke-AnthropicStandardTool](Invoke-AnthropicStandardTool.md)
-Executes a standard tool based on a tool_use response from the model.
+{{ Fill in the Description }}
 
 ### [Invoke-AnthropicWebRequest](Invoke-AnthropicWebRequest.md)
-Core HTTP handler for Anthropic API requests.
+{{ Fill in the Description }}
 
 ### [New-AnthropicConversation](New-AnthropicConversation.md)
-Creates a new conversation object for multi-turn interactions.
+{{ Fill in the Description }}
 
 ### [New-AnthropicImageContent](New-AnthropicImageContent.md)
-Creates an image content block for the Anthropic Messages API.
+{{ Fill in the Description }}
 
 ### [New-AnthropicMessage](New-AnthropicMessage.md)
-Creates a message hashtable for the Anthropic Messages API.
+{{ Fill in the Description }}
 
 ### [New-AnthropicTool](New-AnthropicTool.md)
-Creates a tool definition for the Anthropic Tools API.
+{{ Fill in the Description }}
 
 ### [New-AnthropicToolFromCommand](New-AnthropicToolFromCommand.md)
-Auto-generates an Anthropic tool definition from a PowerShell command.
+{{ Fill in the Description }}
 
 ### [New-AnthropicToolResult](New-AnthropicToolResult.md)
-Creates a tool result message to send back to the model.
+{{ Fill in the Description }}
 
 ### [Set-AnthropicRouterConfig](Set-AnthropicRouterConfig.md)
-Configures the model router with task-to-model mappings.
+{{ Fill in the Description }}
 
 ### [Test-AnthropicEndpoint](Test-AnthropicEndpoint.md)
-Tests connectivity to the Anthropic-compatible endpoint.
+{{ Fill in the Description }}
 

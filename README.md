@@ -143,13 +143,26 @@ Connect-Anthropic -Server 'api.anthropic.com' -ApiKey $key -Model 'claude-sonnet
 - [Troubleshooting](docs/Troubleshooting.md) - Common errors and solutions
 - [Changelog](CHANGELOG.md) - Version history
 
-## Ollama Compatibility
+## Backends and capability awareness
 
-This module works seamlessly with [Ollama's Anthropic compatibility layer](https://docs.ollama.com/api/anthropic-compatibility).
+The module talks to any Anthropic-compatible endpoint and adapts the request to what
+that backend supports. `Connect-Anthropic` detects the backend automatically (stored as
+`.Provider`); override with `-Provider`. Models are discovered live - Anthropic Cloud via
+`GET /v1/models`, Ollama via `/api/tags` - so nothing about specific models is hardcoded.
 
-**Supported:** Messages API, streaming, tools/function calling, base64 images, system prompts, temperature/top_p/top_k
+Request fields are gated by capability, so the same call works on both backends:
 
-**Not Supported by Ollama:** Token counting, URL-based images, cache control, batches API, PDFs
+| Feature | Anthropic Cloud | Ollama ([compat layer](https://docs.ollama.com/api/anthropic-compatibility)) |
+| --- | --- | --- |
+| Messages, streaming, tools, base64 images, system prompts | Yes | Yes |
+| Thinking | Adaptive (`-Thinking` + `-Effort`) on current models | Enabled/disabled (`-Thinking` `-ThinkingBudget`) |
+| Sampling (`-Temperature`/`-TopP`/`-TopK`) | Omitted on adaptive-only models (they 400) | Yes |
+| `-ToolChoice`, `-Metadata` | Yes | Omitted (unsupported) |
+| `-CacheControl`, `-ResponseSchema` (structured outputs) | Yes | Omitted (unsupported) |
+| `Get-AnthropicTokenCount` | Yes (`/v1/messages/count_tokens`) | Skipped (approximate only) |
+| URL-based images, Batch API, PDFs | Cloud only | No |
+
+Unsupported fields are dropped with a warning rather than causing an API error.
 
 ## License
 

@@ -15,13 +15,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Local pre-push validation script (`test-local.ps1`)
 - Contributing guidelines and issue templates
 
+## [0.2.0]
+
+### Added
+
+- **Backend detection.** `Connect-Anthropic` now detects the backend (`.Provider`:
+  Anthropic / Ollama / Generic) and accepts `-Provider` to override, plus
+  `-AnthropicVersion` and `-Beta` for header control.
+- **Live model discovery.** `Get-AnthropicModel` queries the Anthropic Models API
+  (`GET /v1/models`) on cloud and `/api/tags` on Ollama, cached on the connection
+  (`-Refresh` to re-query). Tab-completion is driven from this - no hardcoded model list.
+- **Capability-aware requests.** A new internal resolver (`Get-AnthropicModelCapability`)
+  reads live model capabilities (or a per-provider profile) so requests only include
+  fields the target accepts.
+- `Invoke-AnthropicMessage`: `-Effort`, `-ThinkingDisplay`, `-Metadata`, `-CacheControl`
+  / `-CacheTtl`, `-ResponseSchema` (structured outputs), and per-request `-Beta`.
+- `Get-AnthropicTokenCount` - counts input tokens via `POST /v1/messages/count_tokens`
+  (Anthropic Cloud).
+- Refusal handling: responses expose `.Refused` and surface `stop_details` when the
+  model declines (`stop_reason: "refusal"`).
+
 ### Changed
 
-- (nothing yet)
+- **Thinking is now backend-aware.** `-Thinking` requests adaptive thinking on current
+  Anthropic models (steer with `-Effort`) and enabled+budget on Ollama/legacy models.
+- Sampling parameters (`temperature`/`top_p`/`top_k`), `-ToolChoice`, and `-Metadata`
+  are omitted (with a warning) on backends/models that reject them, instead of causing
+  a 400.
+- Argument-completer no longer ships a hardcoded (and now retired) Claude model list.
 
 ### Fixed
 
 - `Connect-Anthropic` no longer strips the URL scheme, fixing HTTPS endpoints being silently downgraded to HTTP (#1).
+- Removed retired model IDs (`claude-3-5-sonnet-20241022`, `claude-3-5-haiku-20241022`,
+  `claude-3-opus-20240229`) from tab-completion.
 
 ## [0.1.0] - 2026-01-23
 
